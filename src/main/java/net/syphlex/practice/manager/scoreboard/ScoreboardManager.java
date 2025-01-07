@@ -1,0 +1,127 @@
+package net.syphlex.practice.manager.scoreboard;
+
+import net.syphlex.practice.Practice;
+import net.syphlex.practice.manager.kit.impl.BoxingKit;
+import net.syphlex.practice.manager.profile.Profile;
+import net.syphlex.practice.util.StringUtil;
+import net.syphlex.practice.Practice;
+import net.syphlex.practice.util.StringUtil;
+import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class ScoreboardManager {
+
+    public void onEnable(){
+        new BukkitRunnable(){
+            @Override
+            public void run(){
+                for (Profile profile : Practice.get().getProfileManager().getProfileMap().values()) {
+
+                    // scoreboard either not loaded yet or is disabled
+                    if (profile.getScoreboard() == null) {
+                        continue;
+                    }
+
+                    profile.getScoreboard().updateTitle(StringUtil.CC(Practice.PRIMARY_COLOR + "&lSyphlex &7❘ &fPractice"));
+
+                    if (profile.isInMatch()) {
+                        profile.getScoreboard().updateLines(getInMatchScoreboardLines(profile));
+                    } else {
+                        profile.getScoreboard().updateLines(getMainScoreboardLines(profile));
+                    }
+                }
+            }
+        }.runTaskTimer(Practice.get(), 0L, 20L);
+    }
+
+    public List<String> getMainScoreboardLines(Profile profile) {
+        List<String> lines = new ArrayList<>();
+        lines.add("&f&m-------------------"); // Top line
+
+        lines.add(" ");
+        lines.add(Practice.PRIMARY_COLOR + "» "
+                + Practice.SECONDARY_COLOR + "Region: "
+                + Practice.PRIMARY_COLOR + "NA");
+        lines.add(" ");
+
+        lines.add(Practice.PRIMARY_COLOR + "» "
+                + Practice.SECONDARY_COLOR + "Online: "
+                + Practice.PRIMARY_COLOR + Bukkit.getOnlinePlayers().size());
+
+        lines.add(Practice.PRIMARY_COLOR + "» "
+                + Practice.SECONDARY_COLOR + "In Match: "
+                + Practice.PRIMARY_COLOR + Practice.get().getMatchManager().getTotalInMatch());
+
+        lines.add(Practice.PRIMARY_COLOR + "» "
+                + Practice.SECONDARY_COLOR + "In Queue: "
+                + Practice.PRIMARY_COLOR + Practice.get().getQueueManager().getTotalInQueue());
+
+        lines.add(" ");
+        lines.add(Practice.PRIMARY_COLOR + "syphlex.net");
+        lines.add("&f&m-------------------"); // Bottom line with unique padding
+        return StringUtil.CC(lines);
+    }
+
+    public List<String> getInMatchScoreboardLines(Profile profile) {
+        List<String> lines = new ArrayList<>();
+
+        if (profile.isInParty() && profile.isInMatch()) {
+            lines.add("&f&m-------------------"); // Top line
+            lines.add(Practice.PRIMARY_COLOR + "» "
+                    + Practice.SECONDARY_COLOR
+                    + "Your Ping: " + Practice.PRIMARY_COLOR
+                    + profile.getPing() + "ms");
+            lines.add(" ");
+            lines.add(Practice.PRIMARY_COLOR + "syphlex.net");
+            lines.add("&f&m-------------------"); // Bottom line with unique padding
+            return StringUtil.CC(lines);
+        }
+
+        if (profile.isInMatch()) {
+            lines.add("&f&m-------------------"); // Top line
+            lines.add(Practice.PRIMARY_COLOR + "» "
+                    + Practice.SECONDARY_COLOR + "Your Ping: "
+                    + Practice.PRIMARY_COLOR + profile.getPing() + "ms");
+            lines.add(Practice.PRIMARY_COLOR + "» "
+                    + Practice.SECONDARY_COLOR + "Their Ping: "
+                    + Practice.PRIMARY_COLOR + profile.getMatchOpponent().getPing() + "ms");
+
+            if (profile.getMatch().getKit() instanceof BoxingKit) {
+
+                int profileHits = profile.getHits();
+                int opponentHits = profile.getMatchOpponent().getHits();
+
+                int difference = profileHits - opponentHits;
+
+                String differenceAsString = "&7(0)";
+
+                if (difference < 0) {
+                    differenceAsString = "&c(" + (difference) + ")";
+                } else if (difference > 0) {
+                    differenceAsString = "&a(+" + (difference) + ")";
+                }
+
+                lines.add(" ");
+                lines.add(Practice.PRIMARY_COLOR + "&lHits: " + differenceAsString);
+                lines.add(Practice.PRIMARY_COLOR + "» "
+                        + Practice.SECONDARY_COLOR + "You: "
+                        + Practice.PRIMARY_COLOR + profileHits);
+                lines.add(Practice.PRIMARY_COLOR + "» "
+                        + Practice.SECONDARY_COLOR + "Them: "
+                        + Practice.PRIMARY_COLOR + opponentHits);
+            }
+
+            lines.add(" ");
+            lines.add(Practice.PRIMARY_COLOR + "syphlex.net");
+            lines.add("&f&m-------------------"); // Bottom line with unique padding
+        }
+
+        return StringUtil.CC(lines);
+    }
+}

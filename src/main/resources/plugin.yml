@@ -1,0 +1,11 @@
+name: Practice
+author: kidcoben
+version: 1.0.0
+main: net.syphlex.practice.Practice
+
+commands:
+  setspawn:
+  arena:
+    aliases: [map]
+  party:
+    aliases: [p]
