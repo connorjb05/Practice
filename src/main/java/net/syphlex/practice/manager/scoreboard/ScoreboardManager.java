@@ -72,11 +72,65 @@ public class ScoreboardManager {
         List<String> lines = new ArrayList<>();
 
         if (profile.isInParty() && profile.isInMatch()) {
-            lines.add("&f&m-------------------"); // Top line
+            lines.add("&f&m-------------------"); // Top
             lines.add(Practice.PRIMARY_COLOR + "» "
                     + Practice.SECONDARY_COLOR
                     + "Your Ping: " + Practice.PRIMARY_COLOR
                     + profile.getPing() + "ms");
+
+            if (!profile.getMatch().isFfa()) {
+
+                int team = (profile.getMatch().getTeamOne().containsKey(profile) ? 1 : 2);
+
+                lines.add(" ");
+                lines.add(Practice.PRIMARY_COLOR + "» "
+                        + Practice.SECONDARY_COLOR
+                        + "Your Team: "
+                        + Practice.PRIMARY_COLOR + (team == 1
+                        ? profile.getMatch().getAlivePlayers(profile.getMatch().getTeamOne()).size()
+                        + "/" + profile.getMatch().getTeamOne().size()
+                        : profile.getMatch().getAlivePlayers(profile.getMatch().getTeamTwo()).size()
+                        + "/" + profile.getMatch().getTeamTwo().size()));
+                lines.add(Practice.PRIMARY_COLOR + "» "
+                        + Practice.SECONDARY_COLOR
+                        + "Other Team: "
+                        + Practice.PRIMARY_COLOR + profile.getMatch().getAliveOpponents(profile).size()
+                        + "/" + profile.getMatch().getOpponents(profile).size());
+
+                if (profile.getMatch().getKit() instanceof BoxingKit) {
+
+                    int teamOneHits = 0;
+                    int teamTwoHits = 0;
+
+                    for (Profile t1 : profile.getMatch().getTeamOne().keySet()) {
+                        teamOneHits += t1.getHits();
+                    }
+
+                    for (Profile t2 : profile.getMatch().getTeamTwo().keySet()) {
+                        teamTwoHits += t2.getHits();
+                    }
+
+                    int difference = team == 1 ? teamOneHits - teamTwoHits : teamTwoHits - teamOneHits;
+
+                    String differenceAsString = "&7(0)";
+
+                    if (difference < 0) {
+                        differenceAsString = "&c(" + (difference) + ")";
+                    } else if (difference > 0) {
+                        differenceAsString = "&a(+" + (difference) + ")";
+                    }
+
+                    lines.add(" ");
+                    lines.add("&b&lHits: " + differenceAsString);
+                    lines.add(Practice.PRIMARY_COLOR + " » "
+                            + Practice.SECONDARY_COLOR + "Your Team: "
+                            + Practice.PRIMARY_COLOR + (team == 1 ? teamOneHits : teamTwoHits));
+                    lines.add(Practice.PRIMARY_COLOR + " » "
+                            + Practice.SECONDARY_COLOR + "Them: "
+                            + Practice.PRIMARY_COLOR + (team == 1 ? teamTwoHits : teamOneHits));
+                }
+            }
+
             lines.add(" ");
             lines.add(Practice.PRIMARY_COLOR + "syphlex.net");
             lines.add("&f&m-------------------"); // Bottom line with unique padding
@@ -109,10 +163,10 @@ public class ScoreboardManager {
 
                 lines.add(" ");
                 lines.add(Practice.PRIMARY_COLOR + "&lHits: " + differenceAsString);
-                lines.add(Practice.PRIMARY_COLOR + "» "
+                lines.add(Practice.PRIMARY_COLOR + " » "
                         + Practice.SECONDARY_COLOR + "You: "
                         + Practice.PRIMARY_COLOR + profileHits);
-                lines.add(Practice.PRIMARY_COLOR + "» "
+                lines.add(Practice.PRIMARY_COLOR + " » "
                         + Practice.SECONDARY_COLOR + "Them: "
                         + Practice.PRIMARY_COLOR + opponentHits);
             }

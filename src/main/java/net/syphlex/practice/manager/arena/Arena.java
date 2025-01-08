@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.syphlex.practice.manager.kit.Kit;
 import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,49 @@ public class Arena {
 
     private boolean open = true;
 
+    public boolean isLocationInsideArena(Location location) {
+
+        int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
+        int maxY = Math.max(corner1.getBlockY(), corner2.getBlockY());
+        int maxZ = Math.max(corner1.getBlockZ(), corner2.getBlockZ());
+
+        int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
+        int minY = Math.min(corner1.getBlockY(), corner2.getBlockY());
+        int minZ = Math.min(corner1.getBlockZ(), corner2.getBlockZ());
+
+        return location.getBlockX() <= maxX
+                && location.getBlockY() <= maxY
+                && location.getBlockZ() <= maxZ
+                && location.getBlockX() >= minX
+                && location.getBlockY() >= minY
+                && location.getBlockZ() >= minZ;
+    }
+
+    public World getWorld(){
+        return spectate.getWorld();
+    }
+
+    public int getMaxX(){
+        return Math.max(corner1.getBlockX(), corner2.getBlockX());
+    }
+
+    public int getMaxY(){
+        return Math.max(corner1.getBlockY(), corner2.getBlockY());
+    }
+
+    public int getMaxZ(){
+        return Math.max(corner1.getBlockZ(), corner2.getBlockZ());
+    }
+
+    public int getMinX(){
+        return Math.min(corner1.getBlockX(), corner2.getBlockX());
+    }
+
     public int getMinY(){
         return Math.min(corner1.getBlockY(), corner2.getBlockY());
+    }
+
+    public int getMinZ(){
+        return Math.min(corner1.getBlockZ(), corner2.getBlockZ());
     }
 }

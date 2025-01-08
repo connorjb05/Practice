@@ -15,6 +15,7 @@ import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.InventoryUtil;
 import net.syphlex.practice.util.PlayerUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -31,6 +32,9 @@ public class Match {
     private final Map<Profile, Boolean> profileMap = new ConcurrentHashMap<>();
     private final Map<Profile, Boolean> teamOne = new ConcurrentHashMap<>();
     private final Map<Profile, Boolean> teamTwo = new ConcurrentHashMap<>();
+
+    private final List<Block> placedBlocks = new ArrayList<>();
+
     private final Party party;
     private final Arena arena;
     private final Kit kit;
@@ -41,7 +45,7 @@ public class Match {
 
     private MatchState matchState = MatchState.STARTING;
 
-    private final BukkitTask matchTask;
+    private BukkitTask matchTask;
 
     private void prepareProfile(Profile profile) {
 
@@ -130,6 +134,9 @@ public class Match {
             prepareProfile(profile);
         }
 
+        startMatch();
+
+        /*
         matchTask = new BukkitRunnable(){
             @Override
             public void run(){
@@ -143,63 +150,34 @@ public class Match {
                         return;
                     }
 
-                    switch (matchState) {
-                        case STARTING:
+                    if (matchState == MatchState.STARTING) {
+                        if (duration-- > 0) {
+                            ffaAlive.forEach(profile -> {
+                                profile.sendMessage(Practice.SECONDARY_COLOR
+                                        + "Match starting in "
+                                        + Practice.PRIMARY_COLOR + (duration + 1)
+                                        + Practice.SECONDARY_COLOR + " seconds...");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        Practice.PRIMARY_COLOR + "&l" + (duration + 1),
+                                        0, 10, 5);
+                            });
+                        }
 
-                            if (duration-- > 0) {
-                                ffaAlive.forEach(profile -> {
-                                    profile.sendMessage(Practice.SECONDARY_COLOR
-                                            + "Match starting in "
-                                            + Practice.PRIMARY_COLOR + (duration + 1)
-                                            + Practice.SECONDARY_COLOR + " seconds...");
-                                    PlayerUtil.sendTitle(profile.getPlayer(),
-                                            Practice.PRIMARY_COLOR + "&l" + (duration + 1),
-                                            0, 10, 5);
-                                });
-                            }
+                        if (duration < 0) {
+                            // getting ready is over, match starts
+                            duration = 600; // 10 minute match
+                            matchState = MatchState.ONGOING;
 
-                            if (duration < 0) {
-                                // getting ready is over, match starts
-                                duration = 600; // 10 minute match
-                                matchState = MatchState.ONGOING;
+                            ffaAlive.forEach(profile -> {
+                                profile.sendMessage("&aMatch started!");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        "&c&lFight!",
+                                        0, 10, 5);
+                            });
 
-                                ffaAlive.forEach(profile -> {
-                                    profile.sendMessage("&aMatch started!");
-                                    PlayerUtil.sendTitle(profile.getPlayer(),
-                                            "&c&lFight!",
-                                            0, 10, 5);
-                                });
-                            }
-
-                            break;
-                        case ONGOING:
-
-                            if (duration-- <= 0) {
-                                // todo end match (draw)
-                                //duration = 3; // 3 seconds before teleporting
-                                //matchState = MatchState.ENDED;
-
-                                endMatch();
-                                return;
-                            }
-
-                            handleOnGoing(ffaAlive);
-                            break;
-                        case ENDED:
-
-                            if (duration-- <= 0) { // 3 seconds before teleporting
-                                // fully end the match (teleport players and reset them)
-
-                                profileMap.keySet().forEach(profile -> {
-                                    handleEnded(profile);
-                                });
-
-                                Practice.get().getMatchManager().removeMatch(Match.this);
-                                cancel();
-                            }
-                            break;
+                            cancel();
+                        }
                     }
-
                 } else {
 
                     List<Profile> teamOneAlive = getAlivePlayers(teamOne);
@@ -221,85 +199,56 @@ public class Match {
                         return;
                     }
 
-                    switch (matchState) {
-                        case STARTING:
+                    if (matchState == MatchState.STARTING) {
+                        if (duration-- > 0) {
+                            teamOneAlive.forEach(profile -> {
+                                profile.sendMessage(Practice.SECONDARY_COLOR
+                                        + "Match starting in "
+                                        + Practice.PRIMARY_COLOR + (duration + 1)
+                                        + Practice.SECONDARY_COLOR + " seconds...");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        Practice.PRIMARY_COLOR + "&l" + (duration + 1),
+                                        0, 10, 5);
+                            });
 
-                            if (duration-- > 0) {
-                                teamOneAlive.forEach(profile -> {
-                                    profile.sendMessage(Practice.SECONDARY_COLOR
-                                            + "Match starting in "
-                                            + Practice.PRIMARY_COLOR + (duration + 1)
-                                            + Practice.SECONDARY_COLOR + " seconds...");
-                                    PlayerUtil.sendTitle(profile.getPlayer(),
-                                            Practice.PRIMARY_COLOR + "&l" + (duration + 1),
-                                            0, 10, 5);
-                                });
+                            teamTwoAlive.forEach(profile -> {
+                                profile.sendMessage(Practice.SECONDARY_COLOR
+                                        + "Match starting in "
+                                        + Practice.PRIMARY_COLOR + (duration + 1)
+                                        + Practice.SECONDARY_COLOR + " seconds...");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        Practice.PRIMARY_COLOR + "&l" + (duration + 1),
+                                        0, 10, 5);
+                            });
+                        }
 
-                                teamTwoAlive.forEach(profile -> {
-                                    profile.sendMessage(Practice.SECONDARY_COLOR
-                                            + "Match starting in "
-                                            + Practice.PRIMARY_COLOR + (duration + 1)
-                                            + Practice.SECONDARY_COLOR + " seconds...");
-                                    PlayerUtil.sendTitle(profile.getPlayer(),
-                                            Practice.PRIMARY_COLOR + "&l" + (duration + 1),
-                                            0, 10, 5);
-                                });
-                            }
+                        if (duration < 0) {
+                            // getting ready is over, match starts
+                            duration = 600; // 10 minute match
+                            matchState = MatchState.ONGOING;
 
-                            if (duration < 0) {
-                                // getting ready is over, match starts
-                                duration = 600; // 10 minute match
-                                matchState = MatchState.ONGOING;
+                            teamOneAlive.forEach(profile -> {
+                                profile.sendMessage("&aMatch started!");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        "&c&lFight!",
+                                        0, 10, 5);
+                            });
 
-                                teamOneAlive.forEach(profile -> {
-                                    profile.sendMessage("&aMatch started!");
-                                    PlayerUtil.sendTitle(profile.getPlayer(),
-                                            "&c&lFight!",
-                                            0, 10, 5);
-                                });
+                            teamTwoAlive.forEach(profile -> {
+                                profile.sendMessage("&aMatch started!");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        "&c&lFight!",
+                                        0, 10, 5);
+                            });
 
-                                teamTwoAlive.forEach(profile -> {
-                                    profile.sendMessage("&aMatch started!");
-                                    PlayerUtil.sendTitle(profile.getPlayer(),
-                                            "&c&lFight!",
-                                            0, 10, 5);
-                                });
-                            }
-
-                            break;
-                        case ONGOING:
-
-                            if (duration-- <= 0) {
-                                // todo end match (draw)
-                                //duration = 3; // 3 seconds before teleporting
-                                //matchState = MatchState.ENDED;
-
-                                endMatch();
-                                return;
-                            }
-
-                            handleOnGoing(teamOneAlive);
-                            handleOnGoing(teamTwoAlive);
-
-                            break;
-                        case ENDED:
-
-                            if (duration-- <= 0) { // 3 seconds before teleporting
-                                // fully end the match (teleport players and reset them)
-
-                                profileMap.keySet().forEach(profile -> {
-                                    handleEnded(profile);
-                                });
-
-                                Practice.get().getMatchManager().removeMatch(Match.this);
-                                cancel();
-                            }
-
-                            break;
+                            cancel();
+                        }
                     }
                 }
             }
         }.runTaskTimer(Practice.get(), 0L, 20L);
+
+         */
     }
 
     public void eliminate(Profile profile) {
@@ -340,6 +289,24 @@ public class Match {
                     + profile.getPlayer().getName() + " &7was eliminated by &c"
                     + profile.getLastAttacker().getPlayer().getName() + "&7.");
             party.sendPartyMessage(" ");
+
+
+            if (ffa) {
+                if (getAlivePlayers(profileMap).size() == 1) {
+                    // winner
+
+                    endMatch();
+                }
+            } else {
+
+                if (getAlivePlayers(teamOne).isEmpty()) {
+                    // team two wins
+                    endMatch();
+                } else if (getAlivePlayers(teamTwo).isEmpty()) {
+                    // team one wins
+                    endMatch();
+                }
+            }
 
         } else {
 
@@ -384,10 +351,159 @@ public class Match {
         }
     }
 
+    public void startMatch(){
+
+        if (kit instanceof BridgeKit && matchState != MatchState.STARTING) {
+
+            matchState = MatchState.STARTING;
+
+            teamOne.keySet().forEach(profile -> {
+                PlayerUtil.resetPlayer(profile.getPlayer());
+                profile.teleport(arena.getPosition1());
+                kit.giveKit(profile);
+            });
+
+            teamTwo.keySet().forEach(profile -> {
+                PlayerUtil.resetPlayer(profile.getPlayer());
+                profile.teleport(arena.getPosition2());
+                kit.giveKit(profile);
+            });
+        }
+
+        matchTask = new BukkitRunnable(){
+            @Override
+            public void run(){
+
+                if (ffa) {
+
+                    List<Profile> ffaAlive = getAlivePlayers(profileMap);
+
+                    if (ffaAlive.size() <= 1 && matchState != MatchState.ENDED) {
+                        endMatch();
+                        return;
+                    }
+
+                    if (matchState == MatchState.STARTING) {
+                        if (duration-- > 0) {
+                            ffaAlive.forEach(profile -> {
+                                profile.sendMessage(Practice.SECONDARY_COLOR
+                                        + "Match starting in "
+                                        + Practice.PRIMARY_COLOR + (duration + 1)
+                                        + Practice.SECONDARY_COLOR + " seconds...");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        Practice.PRIMARY_COLOR + "&l" + (duration + 1),
+                                        0, 10, 5);
+                            });
+                        }
+
+                        if (duration < 0) {
+                            // getting ready is over, match starts
+                            duration = 600; // 10 minute match
+                            matchState = MatchState.ONGOING;
+
+                            ffaAlive.forEach(profile -> {
+                                profile.sendMessage("&aMatch started!");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        "&c&lFight!",
+                                        0, 10, 5);
+                            });
+
+                            cancel();
+                        }
+                    }
+                } else {
+
+                    List<Profile> teamOneAlive = getAlivePlayers(teamOne);
+                    List<Profile> teamTwoAlive = getAlivePlayers(teamTwo);
+
+                    if (teamOneAlive.isEmpty() && matchState != MatchState.ENDED) {
+
+                        // team two wins
+
+                        endMatch();
+                        return;
+                    }
+
+                    if (teamTwoAlive.isEmpty() && matchState != MatchState.ENDED) {
+
+                        // team one wins
+
+                        endMatch();
+                        return;
+                    }
+
+                    if (matchState == MatchState.STARTING) {
+                        if (duration-- > 0) {
+                            teamOneAlive.forEach(profile -> {
+                                profile.sendMessage(Practice.SECONDARY_COLOR
+                                        + "Match starting in "
+                                        + Practice.PRIMARY_COLOR + (duration + 1)
+                                        + Practice.SECONDARY_COLOR + " seconds...");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        Practice.PRIMARY_COLOR + "&l" + (duration + 1),
+                                        0, 10, 5);
+                            });
+
+                            teamTwoAlive.forEach(profile -> {
+                                profile.sendMessage(Practice.SECONDARY_COLOR
+                                        + "Match starting in "
+                                        + Practice.PRIMARY_COLOR + (duration + 1)
+                                        + Practice.SECONDARY_COLOR + " seconds...");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        Practice.PRIMARY_COLOR + "&l" + (duration + 1),
+                                        0, 10, 5);
+                            });
+                        }
+
+                        if (duration < 0) {
+                            // getting ready is over, match starts
+                            duration = 600; // 10 minute match
+                            matchState = MatchState.ONGOING;
+
+                            teamOneAlive.forEach(profile -> {
+                                profile.sendMessage("&aMatch started!");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        "&c&lFight!",
+                                        0, 10, 5);
+                            });
+
+                            teamTwoAlive.forEach(profile -> {
+                                profile.sendMessage("&aMatch started!");
+                                PlayerUtil.sendTitle(profile.getPlayer(),
+                                        "&c&lFight!",
+                                        0, 10, 5);
+                            });
+
+                            cancel();
+                        }
+                    }
+                }
+            }
+        }.runTaskTimer(Practice.get(), 0L, 20L);
+    }
+
     public void endMatch(){
         duration = 3;
         matchState = MatchState.ENDED;
+
+        matchTask = new BukkitRunnable(){
+            @Override
+            public void run(){
+                if (duration-- <= 0) { // 3 seconds before teleporting
+                    // fully end the match (teleport players and reset them)
+
+                    profileMap.keySet().forEach(profile -> {
+                        handleEnded(profile);
+                    });
+
+                    Practice.get().getMatchManager().removeMatch(Match.this);
+                    cancel();
+                }
+            }
+        }.runTaskTimer(Practice.get(), 0L, 20L);
     }
+
+    private void handleStarting(){}
 
     private void handleEnded(Profile profile){
         if (profile.getPlayer().isOnline()) {
@@ -416,23 +532,7 @@ public class Match {
         Practice.get().getQueueManager().getPlayersInMatch().remove(profile);
     }
 
-    private void handleOnGoing(List<Profile> team){
-        // sumo match
-        if (kit instanceof SumoKit) {
-
-            //team.forEach(profile -> {
-            //    if (profile.getPlayer() == null
-            //            || profile.getPlayer().getLocation().getY() <= arena.getMinY()) {
-            //        eliminate(profile);
-            //    }
-            //});
-
-        } else if (kit instanceof BridgeKit) {
-            // bridges match
-        }
-    }
-
-    private List<Profile> getAlivePlayers(Map<Profile, Boolean> team){
+    public List<Profile> getAlivePlayers(Map<Profile, Boolean> team){
         List<Profile> alive = new ArrayList<>();
         for (Map.Entry<Profile, Boolean> entry : team.entrySet()) {
             if (entry.getValue()) {

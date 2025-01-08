@@ -71,14 +71,21 @@ public class QueueManager {
                             InventoryUtil.setSpawnInventory(p1.getPlayer());
                             InventoryUtil.setSpawnInventory(p2.getPlayer());
 
+                            p1.setKitQueued(null);
+                            p2.setKitQueued(null);
+
                             continue;
                         }
+
+                        p1.setKitQueued(null);
+                        p2.setKitQueued(null);
 
                         Practice.get().getMatchManager().getMatchMap()
                                 .get(kit).add(new Match(
                                         Collections.singletonList(p1),
                                         Collections.singletonList(p2),
                                         null, arena, kit, true, false));
+
                     }
                 }
             }

@@ -3,6 +3,7 @@ package net.syphlex.practice.listener;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.kit.impl.BoxingKit;
+import net.syphlex.practice.manager.kit.impl.BridgeKit;
 import net.syphlex.practice.manager.kit.impl.SumoKit;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.match.MatchState;
@@ -13,8 +14,10 @@ import net.syphlex.practice.manager.party.Party;
 import net.syphlex.practice.manager.profile.PlayerState;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.ItemUtil;
+import net.syphlex.practice.util.PlayerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -128,8 +131,8 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        final Player p = (Player) e.getEntity();
-        final Profile profile = Practice.get().getProfileManager().get(p);
+        final Player player = (Player) e.getEntity();
+        final Profile profile = Practice.get().getProfileManager().get(player);
 
         if (profile.getPlayerState() == PlayerState.IN_SPAWN) {
             e.setCancelled(true);
@@ -142,18 +145,35 @@ public class PlayerListener implements Listener {
 
         if (profile.isInMatch()) {
 
-            if (profile.getMatch().getMatchState() != MatchState.ONGOING) {
+            final Match match = profile.getMatch();
+
+            if (match.getMatchState() != MatchState.ONGOING) {
                 e.setCancelled(true);
             }
 
-            if (profile.getMatch().getKit() instanceof SumoKit
-                    || profile.getMatch().getKit() instanceof BoxingKit) {
+            /*
+            Handles a players death whilst in a bridge duel
+             */
+            if (match.getKit() instanceof BridgeKit) {
+
+                if (player.getHealth() - e.getFinalDamage() <= 0) {
+                    e.setCancelled(true);
+
+                    if (match.getTeamOne().containsKey(profile)) {
+                        profile.teleport(match.getArena().getPosition1());
+                    } else {
+                        profile.teleport(match.getArena().getPosition2());
+                    }
+                }
+                return;
+            }
+
+            if (match.getKit() instanceof SumoKit
+                    || match.getKit() instanceof BoxingKit) {
                 e.setDamage(0);
             }
 
-            if (profile.getMatch().getKit() instanceof BoxingKit) {
-
-                final Match match = profile.getMatch();
+            if (match.getKit() instanceof BoxingKit) {
 
                 damagerProfile.setHits(damagerProfile.getHits() + 1);
 
@@ -166,17 +186,6 @@ public class PlayerListener implements Listener {
                 }
             }
         }
-    }
-
-    @EventHandler
-    public void onMobSpawnEvent(EntitySpawnEvent e){
-        if (e.getEntity() instanceof Player){
-            return;
-        }
-        if (e.getEntity() instanceof Item) {
-            return;
-        }
-        e.setCancelled(true);
     }
 
     @EventHandler
@@ -237,11 +246,58 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onBlockPlaceEvent(BlockPlaceEvent e){
+
+        final Player player = e.getPlayer();
+        final Profile profile = Practice.get().getProfileManager().get(player);
+
+        if (profile.isInMatch()) {
+
+            final Match match = profile.getMatch();
+
+            if (match.getKit() instanceof BridgeKit) {
+
+                if (!match.getArena().isLocationInsideArena(e.getBlock().getLocation())) {
+                    e.setCancelled(true);
+                    return;
+                }
+
+                match.getPlacedBlocks().add(e.getBlock());
+                return;
+            }
+
+            e.setCancelled(true);
+            return;
+        }
+
         e.setCancelled(true);
     }
 
     @EventHandler
     public void onBlockBreakEvent(BlockBreakEvent e){
+
+        final Player player = e.getPlayer();
+        final Profile profile = Practice.get().getProfileManager().get(player);
+
+        if (profile.isInMatch()) {
+
+            final Match match = profile.getMatch();
+
+            if (match.getKit() instanceof BridgeKit) {
+
+                if (!match.getArena().isLocationInsideArena(e.getBlock().getLocation())
+                        || !match.getPlacedBlocks().contains(e.getBlock())) {
+                    e.setCancelled(true);
+                    return;
+                }
+
+                match.getPlacedBlocks().remove(e.getBlock());
+                return;
+            }
+
+            e.setCancelled(true);
+            return;
+        }
+
         e.setCancelled(true);
     }
 
@@ -426,6 +482,20 @@ public class PlayerListener implements Listener {
 
             Match match = profile.getMatch();
 
+            if (match.getKit() instanceof BridgeKit) {
+                if (e.getTo().getY() <= match.getArena().getMinY() - 10) {
+                    if (match.getTeamOne().containsKey(profile)) {
+                        profile.teleport(match.getArena().getPosition1());
+                        PlayerUtil.resetPlayer(profile.getPlayer());
+                        match.getKit().giveKit(profile);
+                    } else {
+                        profile.teleport(match.getArena().getPosition2());
+                        PlayerUtil.resetPlayer(profile.getPlayer());
+                        match.getKit().giveKit(profile);
+                    }
+                }
+            }
+
             if (match.getKit() instanceof SumoKit) {
                 if (e.getTo().getY() <= match.getArena().getMinY()) {
                     match.eliminate(profile);
@@ -445,6 +515,30 @@ public class PlayerListener implements Listener {
         }
     }
 
+    @EventHandler
+    public void onPortalEvent(PlayerPortalEvent e){
 
+        final Player player = e.getPlayer();
+        final Profile profile = Practice.get().getProfileManager().get(player);
+
+        e.setCancelled(true);
+
+        if (profile.isInMatch()) {
+
+            final Match match = profile.getMatch();
+
+            // player scored
+            if (match.getKit() instanceof BridgeKit) {
+
+                profile.sendMessage("&aYOU SCORED!!!");
+                profile.getMatchOpponent().sendMessage("&cYOU GOT SCORED ON");
+
+                // restart the match
+                match.startMatch();
+            }
+
+            return;
+        }
+    }
 
 }

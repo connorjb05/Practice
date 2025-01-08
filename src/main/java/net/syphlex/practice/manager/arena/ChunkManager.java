@@ -7,56 +7,37 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Getter
 public class ChunkManager {
 
-    private boolean chunksLoaded;
+    private final Set<Chunk> chunks = new HashSet<>();
 
     public void onEnable(){
         new BukkitRunnable(){
             @Override
             public void run(){
-
                 for (Arena arena : Practice.get().getArenaManager().getArenaMap().values()) {
 
-                    Location location1 = arena.getCorner1();
-                    Location location2 = arena.getCorner2();
+                    int chunkMaxX = arena.getMaxX() >> 4;
+                    int chunkMinX = arena.getMinX() >> 4;
+                    int chunkMaxZ = arena.getMaxZ() >> 4;
+                    int chunkMinZ = arena.getMinZ() >> 4;
 
-                    if (location1 != null && location2 != null) {
-                        int spawnMinX = location1.getBlockX() >> 4;
-                        int spawnMinZ = location2.getBlockZ() >> 4;
-                        int spawnMaxX = location1.getBlockX() >> 4;
-                        int spawnMaxZ = location2.getBlockZ() >> 4;
-                        if (spawnMinX > spawnMaxX) {
-                            int lastSpawnMinX = spawnMinX;
-                            spawnMinX = spawnMaxX;
-                            spawnMaxX = lastSpawnMinX;
+                    for (int x = chunkMinX; x <= chunkMaxX; x++) {
+                        for (int z = chunkMinZ; z <= chunkMaxZ; z++) {
+                            Chunk chunk = arena.getWorld().getChunkAt(x, z);
+                            chunk.load(true);
+                            chunks.add(chunk);
                         }
-                        if (spawnMinZ > spawnMaxZ) {
-                            int lastSpawnMinZ = spawnMinZ;
-                            spawnMinZ = spawnMaxZ;
-                            spawnMaxZ = lastSpawnMinZ;
-                        }
-                        World spawnWorld = location1.getWorld();
-                        for (int x = spawnMinX; x <= spawnMaxX; ++x) {
-                            for (int z = spawnMinZ; z <= spawnMaxZ; ++z) {
-                                Chunk chunk = spawnWorld.getChunkAt(x >> 4, z >> 4);
-                                if (chunk.isLoaded()) continue;
-                                chunk.load();
-                            }
-                        }
-                        continue;
                     }
 
-                    // todo alert console of arena chunk error
+                    Practice.get().getLogger().info("Successfully loaded chunks for arena: " + arena.getName());
                 }
-
             }
-        }.runTaskLater(Practice.get(), 2L);
-
-        Practice.get().getLogger().info("Finished loading chunks for maps!");
-
-        chunksLoaded = true;
+        }.runTaskLater(Practice.get(), 10L);
     }
 
 }
