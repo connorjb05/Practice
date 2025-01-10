@@ -48,7 +48,7 @@ public class LeaderboardsMenu extends Menu {
                 for (LeaderboardPlayer leaderboardPlayer : Practice.get().getLeaderboardManager().getLeaderboard(kit)) {
                     lore.add(Practice.PRIMARY_COLOR + place + ". " + Practice.SECONDARY_COLOR
                             + leaderboardPlayer.getUsername() + "&7: " + Practice.PRIMARY_COLOR
-                            + leaderboardPlayer.getWins() + " Wins");
+                            + leaderboardPlayer.getElo() + " Elo");
                     place++;
                 }
 

@@ -5,13 +5,19 @@ import com.ngxdev.knockback.KnockbackProfile;
 import fr.mrmicky.fastboard.FastBoard;
 import lombok.Getter;
 import lombok.Setter;
+import net.citizensnpcs.api.CitizensAPI;
+import net.minecraft.server.v1_8_R3.IChatBaseComponent;
+import net.minecraft.server.v1_8_R3.Packet;
+import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
 import net.syphlex.practice.Practice;
+import net.syphlex.practice.manager.bot.Bot;
 import net.syphlex.practice.manager.kit.Kit;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.party.Party;
-import net.syphlex.practice.util.StringUtil;
+import net.syphlex.practice.util.*;
 import net.minecraft.server.v1_8_R3.EntityPlayer;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -42,6 +48,8 @@ public class Profile {
 
     private Match match = null;
 
+    private Match spectatingMatch = null;
+
     private Party party = null;
 
     private int hits;
@@ -50,9 +58,9 @@ public class Profile {
 
     private Profile lastAttacker = null;
 
-    public Profile(final Player player){
+    public Profile(final Player player) {
         this.player = player;
-        this.entityPlayer = ((CraftPlayer)player).getHandle();
+        this.entityPlayer = ((CraftPlayer) player).getHandle();
 
         scoreboard = new FastBoard(player);
         scoreboard.updateTitle(StringUtil.CC(Practice.PRIMARY_COLOR + "&lSyphlex &7❘ &fPractice"));
@@ -67,22 +75,69 @@ public class Profile {
     }
 
     public void setKnockback(String profile){
+
         KnockbackProfile knockbackProfile = KnockbackModule.INSTANCE.profiles
                 .getOrDefault(profile, KnockbackModule.getDefault());
         entityPlayer.setKnockback(knockbackProfile);
     }
 
+    public void startSpectatingMatch(Match match){
+
+        sendMessage("&aYou are now spectating a match...");
+
+        spectatingMatch = match;
+
+        PlayerUtil.resetPlayer(player);
+
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        player.setGameMode(GameMode.CREATIVE);
+
+        match.addSpectator(this);
+
+        // hide spectators from the alive players in game
+        match.getAlivePlayers(match.getProfileMap()).forEach(profile -> {
+            profile.getPlayer().hidePlayer(player);
+        });
+    }
+
+    public void stopSpectatingMatch(){
+
+        sendMessage("&cYou are no longer spectating a match...");
+
+        match.removeSpectator(this);
+
+        teleport(Practice.get().getConfigManager().getMainSpawn());
+        PlayerUtil.resetPlayer(player);
+        InventoryUtil.setSpawnInventory(player);
+
+        // show player back to the players in match once the player is no longer spectating
+        match.getAlivePlayers(match.getProfileMap()).forEach(profile -> {
+            profile.getPlayer().showPlayer(player);
+        });
+
+        spectatingMatch = null;
+    }
+
     public void sendMessage(String message){
+
         if (player == null) {
             return;
         }
+
         player.sendMessage(StringUtil.CC(message));
     }
 
+    public void sendMessage(Messages message){
+        sendMessage(message.get());
+    }
+
     public void teleport(Location location){
+
         if (location == null) {
             return;
         }
+
         player.teleport(location);
     }
 
@@ -96,6 +151,17 @@ public class Profile {
         menu = null;
     }
 
+    public boolean hasPermission(String permission){
+        if (player == null) {
+            return false;
+        }
+        return player.hasPermission(permission);
+    }
+
+    public boolean hasPermission(Permissions permission){
+        return hasPermission(permission.get());
+    }
+
     public boolean isInMenu(){
         return menu != null;
     }
@@ -104,7 +170,12 @@ public class Profile {
         return match != null;
     }
 
+    public boolean isSpectatingMatch(){
+        return spectatingMatch != null;
+    }
+
     public Profile getMatchOpponent(){
+
         if (isInMatch()){
             return match.getOpponents(this).get(0);
         }
@@ -121,5 +192,18 @@ public class Profile {
 
     public int getPing(){
         return entityPlayer.ping;
+    }
+
+    public void sendPacket(Packet<?> packet){
+        ((CraftPlayer)player).getHandle().playerConnection.sendPacket(packet);
+    }
+
+    public void sendTitle(final String title, int fadeIn, int stay, int fadeOut){
+        CraftPlayer craftPlayer = (CraftPlayer) player;
+
+        IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + StringUtil.CC(title) + "\"}");
+        PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleComponent, fadeIn, stay, fadeOut);
+
+        craftPlayer.getHandle().playerConnection.sendPacket(titlePacket);
     }
 }

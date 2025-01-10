@@ -14,11 +14,20 @@ public class InventoryUtil {
             return;
         }
 
+        final Profile profile = Practice.get().getProfileManager().get(player);
+
+        if (profile.isInParty()) {
+            setPartyInventory(player);
+            return;
+        }
+
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
 
         player.getInventory().setItem(0, ItemUtil.getQueueMatchItem());
-        player.getInventory().setItem(4, ItemUtil.getCreatePartyItem());
+        player.getInventory().setItem(3, ItemUtil.getEventHostItem());
+        //player.getInventory().setItem(1, ItemUtil.getBotMatchItem());
+        player.getInventory().setItem(5, ItemUtil.getCreatePartyItem());
         player.getInventory().setItem(7, ItemUtil.getLeaderboardsItem());
         player.getInventory().setItem(8, ItemUtil.getSettingsItem());
     }

@@ -80,6 +80,7 @@ public class Party {
             members.setPartyChat(false);
         }
 
+        leader.setParty(null);
         members.clear();
     }
 

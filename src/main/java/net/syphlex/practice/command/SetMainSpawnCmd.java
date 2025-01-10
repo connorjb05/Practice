@@ -3,6 +3,8 @@ package net.syphlex.practice.command;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.AbstractCmd;
+import net.syphlex.practice.util.Messages;
+import net.syphlex.practice.util.Permissions;
 import net.syphlex.practice.util.StringUtil;
 
 public class SetMainSpawnCmd extends AbstractCmd {
@@ -13,8 +15,8 @@ public class SetMainSpawnCmd extends AbstractCmd {
     @Override
     public void onCommand(Profile profile, String[] args) {
 
-        if (!profile.getPlayer().hasPermission("syphlex.setspawn")) {
-            profile.sendMessage("&cNo permission.");
+        if (!profile.hasPermission(Permissions.SET_SPAWN)) {
+            profile.sendMessage(Messages.NO_PERMISSION);
             return;
         }
 

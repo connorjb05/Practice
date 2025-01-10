@@ -6,6 +6,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_8_R3.IChatBaseComponent;
 import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -26,26 +27,18 @@ public class PlayerUtil {
         }
     }
 
-    public void sendTitle(final Player player, final String title, int fadeIn, int stay, int fadeOut){
-
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-
-        IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + StringUtil.CC(title) + "\"}");
-        PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleComponent, fadeIn, stay, fadeOut);
-
-        craftPlayer.getHandle().playerConnection.sendPacket(titlePacket);
-    }
-
-
     public void resetPlayer(Player player){
 
         if (player == null) {
             return;
         }
 
+        player.setGameMode(GameMode.SURVIVAL);
+
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
 
+        player.setFallDistance(0);
         player.setHealth(player.getMaxHealth());
         player.setFoodLevel(20);
         player.setSaturation(20f);

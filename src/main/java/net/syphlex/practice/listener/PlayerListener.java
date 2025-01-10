@@ -1,5 +1,7 @@
 package net.syphlex.practice.listener;
 
+import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPC;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.kit.impl.BoxingKit;
@@ -7,6 +9,7 @@ import net.syphlex.practice.manager.kit.impl.BridgeKit;
 import net.syphlex.practice.manager.kit.impl.SumoKit;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.match.MatchState;
+import net.syphlex.practice.manager.menu.impl.BotMatchMenu;
 import net.syphlex.practice.manager.menu.impl.LeaderboardsMenu;
 import net.syphlex.practice.manager.menu.impl.PartyMatchMenu;
 import net.syphlex.practice.manager.menu.impl.SettingsMenu;
@@ -14,11 +17,11 @@ import net.syphlex.practice.manager.party.Party;
 import net.syphlex.practice.manager.profile.PlayerState;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.ItemUtil;
+import net.syphlex.practice.util.Messages;
+import net.syphlex.practice.util.Permissions;
 import net.syphlex.practice.util.PlayerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -30,7 +33,6 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
@@ -52,6 +54,18 @@ public class PlayerListener implements Listener {
         e.setQuitMessage(null);
 
         Practice.get().getProfileManager().quit(p);
+    }
+
+    @EventHandler
+    public void onPlayerCommandPreprocessEvent(PlayerCommandPreprocessEvent e){
+
+        final Player p = e.getPlayer();
+        final Profile profile = Practice.get().getProfileManager().get(p);
+
+        if (profile.isInMatch()) {
+            e.setCancelled(true);
+            profile.sendMessage("&cYou cannot issue commands while in a match.");
+        }
     }
 
     @EventHandler
@@ -203,7 +217,7 @@ public class PlayerListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onInventoryClickEvent(InventoryClickEvent e) {
 
         if (!(e.getWhoClicked() instanceof Player)) {
@@ -285,7 +299,7 @@ public class PlayerListener implements Listener {
             if (match.getKit() instanceof BridgeKit) {
 
                 if (!match.getArena().isLocationInsideArena(e.getBlock().getLocation())
-                        || !match.getPlacedBlocks().contains(e.getBlock())) {
+                        && !match.getPlacedBlocks().contains(e.getBlock())) {
                     e.setCancelled(true);
                     return;
                 }
@@ -323,6 +337,24 @@ public class PlayerListener implements Listener {
                         // open queue match menu
 
                         profile.openMenu(Practice.get().getMenuManager().getQueueMatchMenu());
+                    } else if (item.isSimilar(ItemUtil.getBotMatchItem())) {
+
+                        // open bot match menu
+
+                        profile.openMenu(new BotMatchMenu());
+
+                    } else if (item.isSimilar(ItemUtil.getEventHostItem())) {
+
+                        // event host item
+
+                        if (!profile.hasPermission(Permissions.EVENT_HOST)) {
+                            profile.sendMessage(Messages.NO_PERMISSION);
+                            profile.sendMessage(Messages.STORE_ADVERTISEMENT);
+                            return;
+                        }
+
+                        profile.sendMessage("&cLol you got scammed cuz this is still in development... ;)");
+
                     } else if (item.isSimilar(ItemUtil.getCreatePartyItem())) {
 
                         // create party
@@ -484,15 +516,16 @@ public class PlayerListener implements Listener {
 
             if (match.getKit() instanceof BridgeKit) {
                 if (e.getTo().getY() <= match.getArena().getMinY() - 10) {
+
                     if (match.getTeamOne().containsKey(profile)) {
                         profile.teleport(match.getArena().getPosition1());
-                        PlayerUtil.resetPlayer(profile.getPlayer());
-                        match.getKit().giveKit(profile);
                     } else {
                         profile.teleport(match.getArena().getPosition2());
-                        PlayerUtil.resetPlayer(profile.getPlayer());
-                        match.getKit().giveKit(profile);
                     }
+
+                    PlayerUtil.resetPlayer(profile.getPlayer());
+                    match.getKit().giveKit(profile);
+                    profile.getPlayer().updateInventory();
                 }
             }
 
@@ -530,15 +563,38 @@ public class PlayerListener implements Listener {
             // player scored
             if (match.getKit() instanceof BridgeKit) {
 
-                profile.sendMessage("&aYOU SCORED!!!");
-                profile.getMatchOpponent().sendMessage("&cYOU GOT SCORED ON");
+                if (match.isPreparing()) {
+                    return;
+                }
+
+                if (match.isTeamOne(profile)) {
+                    match.setTeamOneScore(match.getTeamOneScore() + 1);
+                    profile.teleport(match.getArena().getPosition1());
+                } else {
+                    match.setTeamTwoScore(match.getTeamTwoScore() + 1);
+                    profile.teleport(match.getArena().getPosition2());
+                }
 
                 // restart the match
                 match.startMatch();
+
+                match.getProfileMap().keySet().forEach(players -> {
+
+                    players.sendTitle(Practice.PRIMARY_COLOR
+                                    + profile.getPlayer().getName() + " scored!",
+                            0, 10, 5);
+
+                    players.sendMessage(Practice.PRIMARY_COLOR + "&lScore:");
+                    players.sendMessage(Practice.PRIMARY_COLOR + " » "
+                            + Practice.SECONDARY_COLOR + "Team One: "
+                            + Practice.PRIMARY_COLOR + match.getTeamOneScore() + "/5");
+                    players.sendMessage(Practice.PRIMARY_COLOR + " » "
+                            + Practice.SECONDARY_COLOR + "Team Two: "
+                            + Practice.PRIMARY_COLOR + match.getTeamTwoScore() + "/5");
+                });
             }
 
             return;
         }
     }
-
 }

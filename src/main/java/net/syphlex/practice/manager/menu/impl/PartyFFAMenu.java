@@ -4,6 +4,7 @@ import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.kit.impl.BridgeKit;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.party.Party;
@@ -72,6 +73,11 @@ public class PartyFFAMenu extends Menu {
                 // no arena was found!
                 if (arena == null) {
                     party.sendPartyMessage("&cNo arena found.");
+                    return;
+                }
+
+                if (kit instanceof BridgeKit) {
+                    profile.sendMessage("&cThis kit cannot be selected for FFA Party matches");
                     return;
                 }
 

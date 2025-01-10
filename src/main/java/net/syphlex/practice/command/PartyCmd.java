@@ -3,8 +3,11 @@ package net.syphlex.practice.command;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.AbstractCmd;
+import net.syphlex.practice.util.Messages;
+import net.syphlex.practice.util.Permissions;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import sun.misc.resources.Messages_de;
 
 public class PartyCmd extends AbstractCmd {
     public PartyCmd(String command) {
@@ -106,8 +109,9 @@ public class PartyCmd extends AbstractCmd {
                         "&cYou are no longer speaking in party chat."));
             } else if (args[0].equalsIgnoreCase("open")) {
 
-                if (!profile.getPlayer().hasPermission("syphlex.open.party")) {
-                    profile.sendMessage("&cNo permission."); // todo store advertisement
+                if (!profile.hasPermission(Permissions.OPEN_PARTY)) {
+                    profile.sendMessage(Messages.NO_PERMISSION);
+                    profile.sendMessage(Messages.STORE_ADVERTISEMENT);
                     return;
                 }
 

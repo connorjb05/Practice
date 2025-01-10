@@ -2,6 +2,7 @@ package net.syphlex.practice.manager.scoreboard;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.kit.impl.BoxingKit;
+import net.syphlex.practice.manager.kit.impl.BridgeKit;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.StringUtil;
 import net.syphlex.practice.Practice;
@@ -82,20 +83,22 @@ public class ScoreboardManager {
 
                 int team = (profile.getMatch().getTeamOne().containsKey(profile) ? 1 : 2);
 
-                lines.add(" ");
-                lines.add(Practice.PRIMARY_COLOR + "» "
-                        + Practice.SECONDARY_COLOR
-                        + "Your Team: "
-                        + Practice.PRIMARY_COLOR + (team == 1
-                        ? profile.getMatch().getAlivePlayers(profile.getMatch().getTeamOne()).size()
-                        + "/" + profile.getMatch().getTeamOne().size()
-                        : profile.getMatch().getAlivePlayers(profile.getMatch().getTeamTwo()).size()
-                        + "/" + profile.getMatch().getTeamTwo().size()));
-                lines.add(Practice.PRIMARY_COLOR + "» "
-                        + Practice.SECONDARY_COLOR
-                        + "Other Team: "
-                        + Practice.PRIMARY_COLOR + profile.getMatch().getAliveOpponents(profile).size()
-                        + "/" + profile.getMatch().getOpponents(profile).size());
+                if (!(profile.getMatch().getKit() instanceof BridgeKit)) {
+                    lines.add(" ");
+                    lines.add(Practice.PRIMARY_COLOR + "» "
+                            + Practice.SECONDARY_COLOR
+                            + "Your Team: "
+                            + Practice.PRIMARY_COLOR + (team == 1
+                            ? profile.getMatch().getAlivePlayers(profile.getMatch().getTeamOne()).size()
+                            + "/" + profile.getMatch().getTeamOne().size()
+                            : profile.getMatch().getAlivePlayers(profile.getMatch().getTeamTwo()).size()
+                            + "/" + profile.getMatch().getTeamTwo().size()));
+                    lines.add(Practice.PRIMARY_COLOR + "» "
+                            + Practice.SECONDARY_COLOR
+                            + "Other Team: "
+                            + Practice.PRIMARY_COLOR + profile.getMatch().getAliveOpponents(profile).size()
+                            + "/" + profile.getMatch().getOpponents(profile).size());
+                }
 
                 if (profile.getMatch().getKit() instanceof BoxingKit) {
 
@@ -131,6 +134,10 @@ public class ScoreboardManager {
                 }
             }
 
+            if (profile.getMatch().getKit() instanceof BridgeKit) {
+                getBridgeKitBoard(profile, lines);
+            }
+
             lines.add(" ");
             lines.add(Practice.PRIMARY_COLOR + "syphlex.net");
             lines.add("&f&m-------------------"); // Bottom line with unique padding
@@ -142,9 +149,14 @@ public class ScoreboardManager {
             lines.add(Practice.PRIMARY_COLOR + "» "
                     + Practice.SECONDARY_COLOR + "Your Ping: "
                     + Practice.PRIMARY_COLOR + profile.getPing() + "ms");
-            lines.add(Practice.PRIMARY_COLOR + "» "
-                    + Practice.SECONDARY_COLOR + "Their Ping: "
-                    + Practice.PRIMARY_COLOR + profile.getMatchOpponent().getPing() + "ms");
+
+            if (profile.getMatch().getKit() instanceof BridgeKit) {
+                getBridgeKitBoard(profile, lines);
+            } else {
+                lines.add(Practice.PRIMARY_COLOR + "» "
+                        + Practice.SECONDARY_COLOR + "Their Ping: "
+                        + Practice.PRIMARY_COLOR + profile.getMatchOpponent().getPing() + "ms");
+            }
 
             if (profile.getMatch().getKit() instanceof BoxingKit) {
 
@@ -177,5 +189,39 @@ public class ScoreboardManager {
         }
 
         return StringUtil.CC(lines);
+    }
+
+    private List<String> getBridgeKitBoard(Profile profile, List<String> lines){
+
+        if (profile.getMatch().getKit() instanceof BridgeKit) {
+
+            StringBuilder teamOneScoreString = new StringBuilder();
+            StringBuilder teamTwoScoreString = new StringBuilder();
+
+            for (int i = 0; i < profile.getMatch().getTeamOneScore(); i++) {
+                teamOneScoreString.append("&b⬤");
+            }
+
+            for (int i = 0; i < profile.getMatch().getTeamTwoScore(); i++) {
+                teamTwoScoreString.append("&b⬤");
+            }
+
+            for (int i = profile.getMatch().getTeamOneScore(); i < 5; i++) {
+                teamOneScoreString.append("&7⬤");
+            }
+
+            for (int i = profile.getMatch().getTeamTwoScore(); i < 5; i++) {
+                teamTwoScoreString.append("&7⬤");
+            }
+
+            lines.add(" ");
+            lines.add(Practice.PRIMARY_COLOR + "&lTeam One:");
+            lines.add(Practice.SECONDARY_COLOR + " » " + teamOneScoreString.toString());
+            lines.add(" ");
+            lines.add(Practice.PRIMARY_COLOR + "&lTeam Two:");
+            lines.add(Practice.SECONDARY_COLOR + " » " + teamTwoScoreString.toString());
+        }
+
+        return lines;
     }
 }

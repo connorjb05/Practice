@@ -3,6 +3,8 @@ package net.syphlex.practice.manager.leaderboards;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.kit.Kit;
 import net.syphlex.practice.Practice;
+import net.syphlex.practice.manager.profile.Profile;
+import net.syphlex.practice.util.EloUtil;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -31,7 +33,7 @@ public class LeaderboardManager {
 
             try {
 
-                File dir = new File(Practice.get().getDataFolder(), "/userdata/");
+                File dir = new File(Practice.get().getDataFolder(), "/leaderboards/");
 
                 if (!dir.exists()) {
                     dir.mkdirs();
@@ -53,14 +55,15 @@ public class LeaderboardManager {
                         UUID uuid = UUID.fromString(split[0]);
                         int wins = Integer.parseInt(split[1]);
                         int loses = Integer.parseInt(split[2]);
+                        int elo = Integer.parseInt(split[3]);
 
-                        LeaderboardPlayer leaderboardPlayer = new LeaderboardPlayer(uuid, wins, loses);
+                        LeaderboardPlayer leaderboardPlayer = new LeaderboardPlayer(uuid, elo, wins, loses);
 
                         playerDataMap.get(kit).put(uuid, leaderboardPlayer);
                     }
 
                     Practice.get().getLogger().log(Level.INFO,
-                            "Successfully loaded player data for the "
+                            "Successfully loaded leaderboard data for the "
                                     + kit.getName() + " kit!");
                 }
 
@@ -79,7 +82,7 @@ public class LeaderboardManager {
                     Map<UUID, LeaderboardPlayer> playerData = playerDataMap.get(kit);
 
                     List<LeaderboardPlayer> leaderboardList = playerData.values().stream()
-                            .sorted((p1, p2) -> Integer.compare(p2.getWins(), p1.getWins()))
+                            .sorted((p1, p2) -> Integer.compare(p2.getElo(), p1.getElo()))
                             .limit(10)
                             .collect(Collectors.toList());
 
@@ -95,7 +98,7 @@ public class LeaderboardManager {
 
             try {
 
-                File dir = new File(Practice.get().getDataFolder(), "/userdata/");
+                File dir = new File(Practice.get().getDataFolder(), "/leaderboards/");
 
                 if (!dir.exists()) {
                     dir.mkdirs();
@@ -113,13 +116,14 @@ public class LeaderboardManager {
                 for (LeaderboardPlayer leaderboardPlayer : playerDataMap.get(kit).values()) {
                     config.createSection(leaderboardPlayer.getUuid().toString()
                             + ";" + leaderboardPlayer.getWins()
-                            + ";" + leaderboardPlayer.getLoses());
+                            + ";" + leaderboardPlayer.getLoses()
+                            + ";" + leaderboardPlayer.getElo());
                 }
 
                 config.save(file);
 
                 Practice.get().getLogger().log(Level.INFO,
-                        "Successfully stored player data for the "
+                        "Successfully stored leaderboard data for the "
                                 + kit.getName() + " kit!");
 
             } catch (Exception e) {
@@ -128,20 +132,40 @@ public class LeaderboardManager {
         }
     }
 
+    public LeaderboardPlayer getLeaderboardPlayer(Kit kit, UUID uuid){
+        return playerDataMap.get(kit).get(uuid);
+    }
+
     public List<LeaderboardPlayer> getLeaderboard(Kit kit){
         return leaderboardMap.getOrDefault(kit, Collections.emptyList());
     }
 
-    public void updateLeaderboardPlayer(Kit kit, Player player, int wins, int loses){
-        UUID uuid = player.getUniqueId();
+    public void updateLeaderboardPlayer(Kit kit, Profile profile, int wins, int loses){
+
+        UUID uuid = profile.getPlayer().getUniqueId();
+
+        int opponentElo = getElo(profile.getMatchOpponent().getPlayer().getUniqueId(), kit);
+
+        int profileElo = getElo(uuid, kit);
+
+        int eloChange = EloUtil.calculateEloChange(profileElo, opponentElo, loses == 0);
+
         playerDataMap.computeIfAbsent(kit, k -> new ConcurrentHashMap<>())
                 .compute(uuid, (key, existing) -> {
                     if (existing == null) {
-                        return new LeaderboardPlayer(uuid, wins, loses);
+                        return new LeaderboardPlayer(uuid, 1000 + eloChange, wins, loses);
                     }
                     existing.setWins(existing.getWins() + wins);
                     existing.setLoses(existing.getLoses() + loses);
+                    existing.setElo(existing.getElo() + eloChange);
                     return existing;
                 });
+    }
+
+    public int getElo(UUID uuid, Kit kit){
+        if (!playerDataMap.get(kit).containsKey(uuid)) {
+            return 1000;
+        }
+        return playerDataMap.get(kit).get(uuid).getElo();
     }
 }

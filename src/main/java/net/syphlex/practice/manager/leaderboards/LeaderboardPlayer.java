@@ -13,6 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class LeaderboardPlayer {
     private final UUID uuid;
+    private int elo;
     private int wins;
     private int loses;
 
@@ -27,5 +28,9 @@ public class LeaderboardPlayer {
     public float getWLR(){
         float wlr = (float)Math.min(wins, 1) / (float)Math.min(loses, 1);
         return Math.round(wlr * 100) / 100.0f;
+    }
+
+    public int getMatchesPlayed(){
+        return wins + loses;
     }
 }

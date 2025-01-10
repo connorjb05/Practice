@@ -17,6 +17,21 @@ public class ItemUtil {
                 .build();
     }
 
+    public ItemStack getBotMatchItem(){
+        return new ItemBuilder()
+                .setName(Practice.PRIMARY_COLOR + "Duel a Bot &7(Right Click)")
+                .setMaterial(Material.GOLD_SWORD)
+                .setUnbreakable(true)
+                .build();
+    }
+
+    public ItemStack getEventHostItem(){
+        return new ItemBuilder()
+                .setName(Practice.PRIMARY_COLOR + "Event Host &7(Right Click)")
+                .setMaterial(Material.EYE_OF_ENDER)
+                .build();
+    }
+
     public ItemStack getCreatePartyItem(){
         return new ItemBuilder()
                 .setName(Practice.PRIMARY_COLOR + "Create Party &7(Right Click)")

@@ -4,8 +4,12 @@ version: 1.0.0
 main: net.syphlex.practice.Practice
 
 commands:
+  test:
   setspawn:
   arena:
     aliases: [map]
   party:
     aliases: [p]
+  spectate:
+    aliases: [spec]
+  spawn:

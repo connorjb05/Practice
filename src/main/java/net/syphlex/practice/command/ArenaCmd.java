@@ -5,6 +5,9 @@ import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.kit.Kit;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.AbstractCmd;
+import net.syphlex.practice.util.Messages;
+import net.syphlex.practice.util.Permissions;
+import org.bukkit.ChatColor;
 
 public class ArenaCmd extends AbstractCmd {
     public ArenaCmd(String command) {
@@ -14,8 +17,8 @@ public class ArenaCmd extends AbstractCmd {
     @Override
     public void onCommand(Profile profile, String[] args) {
 
-        if (!profile.getPlayer().hasPermission("syphlex.arena")) {
-            profile.sendMessage("&cNo permission.");
+        if (!profile.hasPermission(Permissions.ARENA)) {
+            profile.sendMessage(Messages.NO_PERMISSION);
             return;
         }
 
@@ -106,12 +109,49 @@ public class ArenaCmd extends AbstractCmd {
                 Practice.get().getArenaManager().getArenaMap().get(arenaName)
                         .setSpectate(profile.getPlayer().getLocation());
 
+            } else if (args[0].equalsIgnoreCase("teleport")) {
+
+                if (!Practice.get().getArenaManager().arenaExists(arenaName)) {
+                    profile.sendMessage("&cCould not find an arena with that name.");
+                    return;
+                }
+
+                if (Practice.get().getArenaManager().getArenaMap().get(arenaName).getSpectate() == null) {
+                    profile.sendMessage("&cCould not find a location to teleport to.");
+                    return;
+                }
+
+                profile.sendMessage("&aTeleporting to " + arenaName + "...");
+                profile.teleport(Practice.get().getArenaManager().getArenaMap().get(arenaName).getSpectate());
+
+            } else if (args[0].equalsIgnoreCase("kits")) {
+
+                if (!Practice.get().getArenaManager().arenaExists(arenaName)) {
+                    profile.sendMessage("&cCould not find an arena with that name.");
+                    return;
+                }
+
+                if (Practice.get().getArenaManager().getArenaMap().get(arenaName).getKits().isEmpty()) {
+                    profile.sendMessage(Practice.PRIMARY_COLOR + "&lKits: &cNone");
+                    return;
+                }
+
+                profile.sendMessage(Practice.PRIMARY_COLOR + "&lKits:");
+                for (Kit kit : Practice.get().getArenaManager().getArenaMap().get(arenaName).getKits()) {
+                    profile.sendMessage(Practice.PRIMARY_COLOR + " » "
+                            + Practice.SECONDARY_COLOR + ChatColor.stripColor(kit.getName()));
+                }
             }
         } else if (args.length == 1 && args[0].equalsIgnoreCase("list")) {
 
-            profile.sendMessage("&6Arenas:");
+            if (Practice.get().getArenaManager().getArenaMap().isEmpty()) {
+                profile.sendMessage(Practice.PRIMARY_COLOR + "&lArenas: &cNone");
+                return;
+            }
+
+            profile.sendMessage(Practice.PRIMARY_COLOR + "&lArenas:");
             for (String arenaName : Practice.get().getArenaManager().getArenaMap().keySet()) {
-                profile.sendMessage(" &7* &e" + arenaName);
+                profile.sendMessage( Practice.PRIMARY_COLOR + " » " + Practice.SECONDARY_COLOR + arenaName);
             }
 
         } else if (args.length == 3 && args[0].equalsIgnoreCase("addkit")) {
@@ -172,16 +212,18 @@ public class ArenaCmd extends AbstractCmd {
         } else {
             profile.sendMessage(" ");
             profile.sendMessage(Practice.PRIMARY_COLOR + "&lArena Help:");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena create <arena>");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena delete <arena>");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena pos1 <arena>");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena pos2 <arena>");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena corner1 <arena>");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena corner2 <arena>");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena spectate <arena>");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena addkit <kit> <arena>");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena delkit <kit> <arena>");
-            profile.sendMessage(" &7* " + Practice.PRIMARY_COLOR + "/arena list");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena create" + Practice.SECONDARY_COLOR + " <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena delete" + Practice.SECONDARY_COLOR + " <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena pos1" + Practice.SECONDARY_COLOR + " <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena pos2" + Practice.SECONDARY_COLOR + " <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena corner1" + Practice.SECONDARY_COLOR + " <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena corner2" + Practice.SECONDARY_COLOR + " <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena spectate" + Practice.SECONDARY_COLOR + " <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena addkit" + Practice.SECONDARY_COLOR + " <kit> <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena delkit" + Practice.SECONDARY_COLOR + " <kit> <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena kits" + Practice.SECONDARY_COLOR + " <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena list");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena teleport" + Practice.SECONDARY_COLOR + " <arena>");
             profile.sendMessage(" ");
         }
     }
