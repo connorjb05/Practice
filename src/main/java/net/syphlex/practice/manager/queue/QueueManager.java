@@ -115,7 +115,9 @@ public class QueueManager {
             profile.sendMessage("&7Searching for a match...");
             profile.sendMessage(" ");
 
-            InventoryUtil.setQueuedInventory(profile.getPlayer());
+            if (!profile.isInMatch()) {
+                InventoryUtil.setQueuedInventory(profile.getPlayer());
+            }
 
             profile.setKitQueued(kit);
 
@@ -143,7 +145,9 @@ public class QueueManager {
 
         profile.setKitQueued(null);
 
-        InventoryUtil.setSpawnInventory(profile.getPlayer());
+        if (!profile.isInMatch()) {
+            InventoryUtil.setSpawnInventory(profile.getPlayer());
+        }
     }
 
     public int getInQueue(Kit kit){

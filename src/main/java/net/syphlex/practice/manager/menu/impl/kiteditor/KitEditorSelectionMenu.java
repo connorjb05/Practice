@@ -1,12 +1,9 @@
-package net.syphlex.practice.manager.menu.impl;
+package net.syphlex.practice.manager.menu.impl.kiteditor;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.kit.Kit;
-import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
-import net.syphlex.practice.manager.party.Party;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.StringUtil;
 import org.bukkit.Material;
@@ -18,9 +15,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class PartySplitMenu extends Menu {
-    public PartySplitMenu() {
-        super("Party Split Match", 27);
+/**
+ * Menu to select which kit to edit
+ */
+public class KitEditorSelectionMenu extends Menu {
+    public KitEditorSelectionMenu() {
+        super("Select a Kit", 27);
+
 
         for (int i = 0; i < size; i++) {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15));
@@ -37,9 +38,10 @@ public class PartySplitMenu extends Menu {
                 itemMeta.addItemFlags(ItemFlag.values());
 
                 List<String> lore = new ArrayList<>(Arrays.asList(
-                        " ",
-                        "&aClick to start a party split match.",
-                        " "));
+                        "&f&m----------------------",
+                        "&aClick to manipulate your",
+                        "&alayout for this kit.",
+                        "&f&m----------------------"));
 
                 itemMeta.setLore(StringUtil.CC(lore));
                 itemStack.setItemMeta(itemMeta);
@@ -56,30 +58,20 @@ public class PartySplitMenu extends Menu {
 
         final Profile profile = e.getProfile();
 
-        if (!profile.isInParty()) {
-            return;
-        }
-
-        final Party party = profile.getParty();
-
         int slot = 10;
         for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
 
             if (e.getSlot() == slot) {
-
-                Arena arena = Practice.get().getArenaManager().getFreeArena(kit);
-
-                // no arena was found!
-                if (arena == null) {
-                    party.sendPartyMessage("&cNo arena found.");
-                    return;
-                }
-
-                Practice.get().getMatchManager().getMatchMap()
-                        .get(kit).add(new Match(null, null,
-                                party, arena, kit, false, false));
-
                 profile.getPlayer().closeInventory();
+                profile.openMenu(new KitEditorMenu(kit));
+
+                profile.getPlayer().getInventory().clear();
+                if (profile.getKitPresets().get(kit) != null) {
+                    profile.getPlayer().getInventory().setContents(profile.getKitPreset(kit));
+                } else {
+                    profile.getPlayer().getInventory().setContents(kit.getInventory());
+                }
+                return;
             }
 
             slot++;

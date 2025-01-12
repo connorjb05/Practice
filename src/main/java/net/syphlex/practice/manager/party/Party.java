@@ -32,33 +32,30 @@ public class Party {
             return;
         }
 
-        profile.sendMessage(" ");
         profile.sendMessage("&aYou have joined "
                 + leader.getPlayer().getName() + "'s party.");
-        profile.sendMessage(" ");
 
         members.add(profile);
 
-        sendPartyMessage("&7(Party) " + Practice.PRIMARY_COLOR + profile.getPlayer().getName()
+        sendPartyMessage(Practice.TERTIARY_COLOR + "(Party) "
+                + Practice.PRIMARY_COLOR + profile.getPlayer().getName()
                 + Practice.SECONDARY_COLOR + " has joined the party.");
     }
 
     public void leave(Profile profile){
 
-        leader.sendMessage("&7(Party) &c" + profile.getPlayer().getName()
+        leader.sendMessage("&c(Party) " + profile.getPlayer().getName()
                 + " has left the party.");
 
         for (Profile members : members) {
-            members.sendMessage("&7(Party) &c" + profile.getPlayer().getName()
+            members.sendMessage("&c(Party) " + profile.getPlayer().getName()
                     + " has left the party.");
         }
 
         members.remove(profile);
 
-        profile.sendMessage(" ");
         profile.sendMessage("&cYou have left "
                 + leader.getPlayer().getName() + "'s party.");
-        profile.sendMessage(" ");
 
         profile.setPartyChat(false);
         profile.setParty(null);
@@ -69,10 +66,8 @@ public class Party {
         leader.setPartyChat(false);
 
         for (Profile members : members) {
-            members.sendMessage(" ");
             members.sendMessage("&cYou have left "
                     + leader.getPlayer().getName() + "'s party. &7(Disbanded)");
-            members.sendMessage(" ");
 
             InventoryUtil.setSpawnInventory(members.getPlayer());
 

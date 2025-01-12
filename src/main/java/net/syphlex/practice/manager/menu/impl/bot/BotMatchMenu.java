@@ -1,4 +1,4 @@
-package net.syphlex.practice.manager.menu.impl;
+package net.syphlex.practice.manager.menu.impl.bot;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;

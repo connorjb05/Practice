@@ -9,14 +9,14 @@ import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.kit.Kit;
 import net.syphlex.practice.manager.kit.impl.BridgeKit;
 import net.syphlex.practice.manager.kit.impl.ComboKit;
-import net.syphlex.practice.manager.kit.impl.SumoKit;
 import net.syphlex.practice.manager.party.Party;
-import net.syphlex.practice.manager.profile.PlayerState;
+import net.syphlex.practice.manager.profile.objects.PlayerState;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.InventoryUtil;
+import net.syphlex.practice.util.ItemUtil;
 import net.syphlex.practice.util.PlayerUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -54,6 +54,8 @@ public class Match {
 
     private void prepareProfile(Profile profile) {
 
+        profile.getDuelRequests().clearRequests();
+
         if (teamOne.containsKey(profile)) {
             profile.teleport(arena.getPosition1());
         }
@@ -76,6 +78,10 @@ public class Match {
 
         if (kit instanceof ComboKit) {
             profile.setKnockback("combo");
+        }
+
+        if (kit instanceof BridgeKit) {
+            profile.setKnockback("bridge");
         }
 
         Practice.get().getQueueManager().getPlayersInMatch().add(profile);
@@ -151,7 +157,7 @@ public class Match {
 
         profileMap.keySet().forEach(matchPlayers -> {
             matchPlayers.sendMessage(Practice.PRIMARY_COLOR + profile.getPlayer().getName()
-                    + Practice.SECONDARY_COLOR + " is now spectating! &7("
+                    + Practice.SECONDARY_COLOR + " is now spectating. &7("
                     + spectators.size() + ")");
         });
     }
@@ -161,7 +167,7 @@ public class Match {
 
         profileMap.keySet().forEach(matchPlayers -> {
             matchPlayers.sendMessage(Practice.PRIMARY_COLOR + profile.getPlayer().getName()
-                    + Practice.SECONDARY_COLOR + " is no longer spectating! &7("
+                    + Practice.SECONDARY_COLOR + " is no longer spectating. &7("
                     + spectators.size() + ")");
         });
     }
@@ -188,8 +194,8 @@ public class Match {
             teamTwo.put(profile, false);
         }
 
-        profile.getPlayer().getWorld().strikeLightningEffect(profile.getPlayer().getLocation());
-        profile.getPlayer().setVelocity(profile.getPlayer().getVelocity().multiply(3.1));
+        //profile.getPlayer().getWorld().strikeLightningEffect(profile.getPlayer().getLocation());
+        //profile.getPlayer().setVelocity(profile.getPlayer().getVelocity().multiply(4.5));
 
         if (profile.getLastAttacker() == null) {
             profile.setLastAttacker(getOpponents(profile).get(0));
@@ -199,27 +205,27 @@ public class Match {
 
             profile.setHits(0);
 
-            party.sendPartyMessage(" ");
-            party.sendPartyMessage("&7(Party) &c"
-                    + profile.getPlayer().getName() + " &7was eliminated by &c"
-                    + profile.getLastAttacker().getPlayer().getName() + "&7.");
-            party.sendPartyMessage(" ");
+            party.sendPartyMessage(Practice.TERTIARY_COLOR + "(Party) "
+                    + Practice.PRIMARY_COLOR + profile.getPlayer().getName()
+                    + Practice.SECONDARY_COLOR + " was eliminated by "
+                    + Practice.PRIMARY_COLOR + profile.getLastAttacker().getPlayer().getName()
+                    + Practice.SECONDARY_COLOR + ".");
 
 
             if (ffa) {
                 if (getAlivePlayers(profileMap).size() == 1) {
                     // winner
 
-                    endMatch();
+                    endMatch(false);
                 }
             } else {
 
                 if (getAlivePlayers(teamOne).isEmpty()) {
                     // team two wins
-                    endMatch();
+                    endMatch(false);
                 } else if (getAlivePlayers(teamTwo).isEmpty()) {
                     // team one wins
-                    endMatch();
+                    endMatch(false);
                 }
             }
 
@@ -236,41 +242,81 @@ public class Match {
             winner.setHits(0);
             profile.setHits(0);
 
-            int loserElo = Practice.get().getLeaderboardManager().getElo(profile.getPlayer().getUniqueId(), kit);
-            int winnerElo = Practice.get().getLeaderboardManager().getElo(winner.getPlayer().getUniqueId(), kit);
+            if (queuedMatch) {
+                int loserElo = Practice.get().getLeaderboardManager().getElo(profile.getPlayer().getUniqueId(), kit);
+                int winnerElo = Practice.get().getLeaderboardManager().getElo(winner.getPlayer().getUniqueId(), kit);
 
-            // update winner leaderboard data
-            Practice.get().getLeaderboardManager().updateLeaderboardPlayer(
-                    winner.getMatch().getKit(),
-                    winner,
-                    1,
-                    0);
-
-            // update loser leaderboard data
-            if (Practice.get().getLeaderboardManager().getLeaderboardPlayer(kit, winner.getPlayer().getUniqueId()).getMatchesPlayed() > 5) {
+                // update winner leaderboard data
                 Practice.get().getLeaderboardManager().updateLeaderboardPlayer(
-                        profile.getMatch().getKit(),
-                        profile,
-                        0,
-                        1);
-                profile.sendMessage(Practice.PRIMARY_COLOR
+                        winner.getMatch().getKit(),
+                        winner,
+                        1,
+                        0);
+
+                // update loser leaderboard data
+                if (Practice.get().getLeaderboardManager().getLeaderboardPlayer(kit, winner.getPlayer().getUniqueId()).getMatchesPlayed() > 5) {
+
+                    Practice.get().getLeaderboardManager().updateLeaderboardPlayer(
+                            profile.getMatch().getKit(),
+                            profile,
+                            0,
+                            1);
+
+                    profile.sendMessage(" ");
+                    profile.sendMessage(Practice.PRIMARY_COLOR
+                            + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
+                            + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + "."
+                            + " &c(" + (Practice.get().getLeaderboardManager().getElo(profile.getPlayer().getUniqueId(), kit) - loserElo) + " Elo)");
+                    profile.sendMessage(" ");
+                    profile.sendMessage(" &aWinner: " + Practice.SECONDARY_COLOR
+                            + winner.getPlayer().getName() + " &7| &cLoser: "
+                            + profile.getPlayer().getName());
+                    profile.sendMessage(" ");
+
+                } else {
+                    profile.sendMessage(" ");
+                    profile.sendMessage(Practice.PRIMARY_COLOR
+                            + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
+                            + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + ".");
+                    profile.sendMessage("&cYour opponent has not played more than 5 matches resulting in you not losing any elo.");
+                    profile.sendMessage(" ");
+                    profile.sendMessage(Practice.PRIMARY_COLOR + "&lMatch Results &7(Click to view)");
+                    profile.sendMessage(" &aWinner: " + Practice.SECONDARY_COLOR
+                            + winner.getPlayer().getName() + " &7| &cLoser: "
+                            + profile.getPlayer().getName());
+                    profile.sendMessage(" ");
+                }
+
+                winner.sendMessage(" ");
+                winner.sendMessage(Practice.PRIMARY_COLOR
                         + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
                         + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + "."
-                        + " &c(" + (Practice.get().getLeaderboardManager().getElo(profile.getPlayer().getUniqueId(), kit) - loserElo) + " Elo)");
-
+                        + " &a(+" + (Practice.get().getLeaderboardManager().getElo(winner.getPlayer().getUniqueId(), kit) - winnerElo) + " Elo)");
+                winner.sendMessage(" ");
             } else {
+
+                profile.sendMessage(" ");
                 profile.sendMessage(Practice.PRIMARY_COLOR
                         + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
                         + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + ".");
-                profile.sendMessage("&cYour opponent has not played more than 5 matches resulting in you not losing any elo.");
+                profile.sendMessage(" ");
+
+                winner.sendMessage(" ");
+                winner.sendMessage(Practice.PRIMARY_COLOR
+                        + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
+                        + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + ".");
+                winner.sendMessage(" ");
             }
 
-            winner.sendMessage(Practice.PRIMARY_COLOR
-                    + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
-                    + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + "."
-                    + " &a(+" + (Practice.get().getLeaderboardManager().getElo(winner.getPlayer().getUniqueId(), kit) - winnerElo) + " Elo)");
+            winner.sendMessage(Practice.PRIMARY_COLOR + "&lMatch Results &7(Click to view)");
+            winner.sendMessage(" &aWinner: " + Practice.SECONDARY_COLOR
+                    + winner.getPlayer().getName() + " &7| &cLoser: "
+                    + profile.getPlayer().getName());
+            winner.sendMessage(" ");
 
-            endMatch();
+            profile.getPlayer().getInventory().setItem(0, ItemUtil.getPlayAgainItem());
+
+            endMatch(false);
         }
     }
 
@@ -292,7 +338,7 @@ public class Match {
                             Practice.PRIMARY_COLOR + "&lTeam One Wins!",
                             0, 10, 5);
                 });
-                endMatch();
+                endMatch(false);
                 return;
             } else if (teamTwoScore >= 5) {
                 profileMap.keySet().forEach(profile -> {
@@ -300,7 +346,7 @@ public class Match {
                             Practice.PRIMARY_COLOR + "&lTeam Two Wins!",
                             0, 10, 5);
                 });
-                endMatch();
+                endMatch(false);
                 return;
             }
 
@@ -311,12 +357,14 @@ public class Match {
                 PlayerUtil.resetPlayer(profile.getPlayer());
                 profile.teleport(arena.getPosition1());
                 kit.giveKit(profile);
+                profile.getPlayer().updateInventory();
             });
 
             teamTwo.keySet().forEach(profile -> {
                 PlayerUtil.resetPlayer(profile.getPlayer());
                 profile.teleport(arena.getPosition2());
                 kit.giveKit(profile);
+                profile.getPlayer().updateInventory();
             });
         }
 
@@ -329,7 +377,7 @@ public class Match {
                     List<Profile> ffaAlive = getAlivePlayers(profileMap);
 
                     if (ffaAlive.size() <= 1 && matchState != MatchState.ENDED) {
-                        endMatch();
+                        endMatch(false);
                         return;
                     }
 
@@ -407,7 +455,7 @@ public class Match {
 
                         // team two wins
 
-                        endMatch();
+                        endMatch(false);
                         return;
                     }
 
@@ -415,7 +463,7 @@ public class Match {
 
                         // team one wins
 
-                        endMatch();
+                        endMatch(false);
                         return;
                     }
 
@@ -554,18 +602,36 @@ public class Match {
         }.runTaskTimer(Practice.get(), 0L, 20L);
     }
 
-    public void endMatch(){
+    public void endMatch(boolean force){
 
-        if (matchTask != null) {
-            matchTask.cancel();
+        if (force) {
+            profileMap.keySet().forEach(this::handleEnded);
+            spectators.forEach(this::handleEnded);
+
+            // todo fix this for performance
+            for (Block block : placedBlocks) {
+                block.setType(Material.AIR);
+            }
+
+            arena.setOpen(true);
+            Practice.get().getMatchManager().removeMatch(Match.this);
+            return;
         }
 
         duration = 3;
         matchState = MatchState.ENDED;
 
+
+        if (party == null && !ffa) {
+            profileMap.keySet().forEach(profile -> {
+                profile.getPlayer().getInventory().setItem(0, ItemUtil.getPlayAgainItem());
+            });
+        }
+
         matchTask = new BukkitRunnable(){
             @Override
             public void run(){
+
                 if (duration-- <= 0) { // 3 seconds before teleporting
                     // fully end the match (teleport players and reset them)
 
@@ -573,6 +639,12 @@ public class Match {
                         handleEnded(profile);
                     });
 
+                    // todo fix this for performance
+                    for (Block block : placedBlocks) {
+                        block.setType(Material.AIR);
+                    }
+
+                    arena.setOpen(true);
                     Practice.get().getMatchManager().removeMatch(Match.this);
                     matchTask.cancel();
                 }
@@ -601,7 +673,6 @@ public class Match {
             } else {
                 InventoryUtil.setPartyInventory(profile.getPlayer());
             }
-
         }
 
         Practice.get().getQueueManager().getPlayersInMatch().remove(profile);
@@ -623,6 +694,24 @@ public class Match {
             }
         }
         return alive;
+    }
+
+    public List<Profile> getTeamAlive(Profile profile){
+        List<Profile> team = new ArrayList<>();
+        if (isTeamOne(profile)) {
+            teamOne.forEach((players, alive) -> {
+                if (alive) {
+                    team.add(players);
+                }
+            });
+        } else if (isTeamTwo(profile)){
+            teamTwo.forEach((players, alive) -> {
+                if (alive) {
+                    team.add(players);
+                }
+            });
+        }
+        return team;
     }
 
     public List<Profile> getAliveOpponents(Profile profile) {

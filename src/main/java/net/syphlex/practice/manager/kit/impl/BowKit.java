@@ -20,26 +20,31 @@ public class BowKit extends Kit {
         inventory = new ItemStack[36];
 
         armor[0] = new ItemBuilder()
-                .setMaterial(Material.LEATHER_BOOTS)
+                .setMaterial(Material.CHAINMAIL_BOOTS)
+                .setUnbreakable(true)
                 .build();
         armor[1] = new ItemBuilder()
-                .setMaterial(Material.LEATHER_LEGGINGS)
+                .setMaterial(Material.CHAINMAIL_LEGGINGS)
+                .setUnbreakable(true)
                 .build();
         armor[2] = new ItemBuilder()
-                .setMaterial(Material.LEATHER_CHESTPLATE)
+                .setMaterial(Material.CHAINMAIL_CHESTPLATE)
+                .setUnbreakable(true)
                 .build();
         armor[3] = new ItemBuilder()
-                .setMaterial(Material.LEATHER_HELMET)
+                .setMaterial(Material.CHAINMAIL_HELMET)
+                .setUnbreakable(true)
                 .build();
 
         inventory[0] = new ItemBuilder()
                 .setMaterial(Material.BOW)
-                .addVanillaEnchant(Enchantment.ARROW_DAMAGE, 1)
+                //.addVanillaEnchant(Enchantment.ARROW_DAMAGE, 1)
+                .addVanillaEnchant(Enchantment.ARROW_KNOCKBACK, 1)
                 .addVanillaEnchant(Enchantment.ARROW_INFINITE, 1)
+                .setUnbreakable(true)
                 .build();
         inventory[1] = new ItemBuilder()
-                .setMaterial(Material.POTION)
-                .setDurability((short)16421)
+                .setMaterial(Material.ENDER_PEARL)
                 .build();
         inventory[2] = new ItemBuilder()
                 .setMaterial(Material.POTION)

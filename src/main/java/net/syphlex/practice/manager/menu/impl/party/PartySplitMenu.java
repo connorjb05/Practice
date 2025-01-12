@@ -1,10 +1,9 @@
-package net.syphlex.practice.manager.menu.impl;
+package net.syphlex.practice.manager.menu.impl.party;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.kit.Kit;
-import net.syphlex.practice.manager.kit.impl.BridgeKit;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.party.Party;
@@ -19,9 +18,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class PartyFFAMenu extends Menu {
-    public PartyFFAMenu() {
-        super("Party FFA Match", 27);
+public class PartySplitMenu extends Menu {
+    public PartySplitMenu() {
+        super("Party Split Match", 27);
 
         for (int i = 0; i < size; i++) {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15));
@@ -39,7 +38,7 @@ public class PartyFFAMenu extends Menu {
 
                 List<String> lore = new ArrayList<>(Arrays.asList(
                         " ",
-                        "&aClick to start a party ffa match.",
+                        "&aClick to start a party split match.",
                         " "));
 
                 itemMeta.setLore(StringUtil.CC(lore));
@@ -76,15 +75,9 @@ public class PartyFFAMenu extends Menu {
                     return;
                 }
 
-                if (kit instanceof BridgeKit) {
-                    profile.sendMessage("&cThis kit cannot be selected for FFA Party matches");
-                    return;
-                }
-
                 Practice.get().getMatchManager().getMatchMap()
-                                .get(kit).add(new Match(
-                                        null, null, party, arena, kit,
-                                false, true));
+                        .get(kit).add(new Match(null, null,
+                                party, arena, kit, false, false));
 
                 profile.getPlayer().closeInventory();
             }

@@ -27,9 +27,7 @@ public class PartyManager {
         partyMap.putIfAbsent(profile, party);
         profile.setParty(party);
 
-        profile.sendMessage("&7");
         profile.sendMessage("&aYou have successfully created a party.");
-        profile.sendMessage("&7");
 
         InventoryUtil.setPartyInventory(profile.getPlayer());
     }
@@ -47,9 +45,7 @@ public class PartyManager {
 
             partyMap.remove(profile);
 
-            profile.sendMessage("&7");
-            profile.sendMessage("&cYou have successfully disbanded your party.");
-            profile.sendMessage("&7");
+            profile.sendMessage("&cYou have disbanded your party.");
 
         } else {
 
@@ -118,12 +114,13 @@ public class PartyManager {
 
         profile.getPartyInvitations().put(party, System.currentTimeMillis());
 
-        party.sendPartyMessage("&7(Party) " + Practice.PRIMARY_COLOR
+        party.sendPartyMessage(Practice.TERTIARY_COLOR + "(Party) " + Practice.PRIMARY_COLOR
                 + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was invited to the party.");
 
         profile.sendMessage(" ");
         PlayerUtil.sendClickableText(profile.getPlayer(),
-                "&7(Party) " + Practice.PRIMARY_COLOR + "You" + Practice.SECONDARY_COLOR + " were invited to "
+                Practice.TERTIARY_COLOR + "(Party) " + Practice.PRIMARY_COLOR
+                        + "You" + Practice.SECONDARY_COLOR + " were invited to "
                         + Practice.PRIMARY_COLOR + party.getLeader().getPlayer().getName() + "'s "
                         + Practice.SECONDARY_COLOR + "party. &a(Click to join)",
                 "party join " + party.getLeader().getPlayer().getName());

@@ -44,26 +44,56 @@ public class Arena {
     }
 
     public int getMaxX(){
+
+        if (corner1 == null || corner2 == null) {
+            return Integer.MIN_VALUE;
+        }
+
         return Math.max(corner1.getBlockX(), corner2.getBlockX());
     }
 
     public int getMaxY(){
+
+        if (corner1 == null || corner2 == null) {
+            return Integer.MIN_VALUE;
+        }
+
         return Math.max(corner1.getBlockY(), corner2.getBlockY());
     }
 
     public int getMaxZ(){
+
+        if (corner1 == null || corner2 == null) {
+            return Integer.MIN_VALUE;
+        }
+
         return Math.max(corner1.getBlockZ(), corner2.getBlockZ());
     }
 
     public int getMinX(){
+
+        if (corner1 == null || corner2 == null) {
+            return Integer.MAX_VALUE;
+        }
+
         return Math.min(corner1.getBlockX(), corner2.getBlockX());
     }
 
     public int getMinY(){
+
+        if (corner1 == null || corner2 == null) {
+            return Integer.MAX_VALUE;
+        }
+
         return Math.min(corner1.getBlockY(), corner2.getBlockY());
     }
 
     public int getMinZ(){
+
+        if (corner1 == null || corner2 == null) {
+            return Integer.MAX_VALUE;
+        }
+
         return Math.min(corner1.getBlockZ(), corner2.getBlockZ());
     }
 }

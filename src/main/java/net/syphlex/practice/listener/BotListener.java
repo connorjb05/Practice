@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class BotListener implements Listener {
 
-    private Map<NPC, Long> lastHitTimes = new HashMap<>();
+    private final Map<NPC, Long> lastHitTimes = new HashMap<>();
     private static final long ATTACK_COOLDOWN = 9L * 50L; // 1 second (1000ms) cooldown
 
     // 50ms * 20 ticks = 1000 ms

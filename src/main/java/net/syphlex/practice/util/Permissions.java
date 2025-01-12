@@ -4,9 +4,11 @@ import net.syphlex.practice.manager.profile.Profile;
 
 public enum Permissions {
     SET_SPAWN("syphlex.setspawn"),
+    BUILD("syphlex.build"),
     ARENA("syphlex.arena"),
     OPEN_PARTY("syphlex.open.party"),
-    EVENT_HOST("syphlex.event.host");
+    EVENT_HOST("syphlex.event.host"),
+    FLY("syphlex.fly");
 
     private final String permission;
 

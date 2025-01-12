@@ -61,16 +61,14 @@ public class LeaderboardManager {
 
                         playerDataMap.get(kit).put(uuid, leaderboardPlayer);
                     }
-
-                    Practice.get().getLogger().log(Level.INFO,
-                            "Successfully loaded leaderboard data for the "
-                                    + kit.getName() + " kit!");
                 }
 
             } catch (Exception e ){
                 e.printStackTrace();
             }
         }
+
+        Practice.get().getLogger().info("Successfully loaded leaderboards for all kits.");
 
         // start refresh clock
         new BukkitRunnable(){
@@ -121,15 +119,12 @@ public class LeaderboardManager {
                 }
 
                 config.save(file);
-
-                Practice.get().getLogger().log(Level.INFO,
-                        "Successfully stored leaderboard data for the "
-                                + kit.getName() + " kit!");
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+
+        Practice.get().getLogger().info("Successfully saved and stored leaderboards for all kits.");
     }
 
     public LeaderboardPlayer getLeaderboardPlayer(Kit kit, UUID uuid){

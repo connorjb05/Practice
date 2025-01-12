@@ -33,11 +33,20 @@ public class ChunkManager {
                             chunks.add(chunk);
                         }
                     }
-
-                    Practice.get().getLogger().info("Successfully loaded chunks for arena: " + arena.getName());
                 }
+                Practice.get().getLogger().info("Successfully loaded all arena chunks.");
             }
         }.runTaskLater(Practice.get(), 10L);
+    }
+
+    public void onDisable(){
+        for (Chunk chunk : chunks) {
+            if (chunk.isLoaded()) {
+                chunk.unload(true);
+            }
+        }
+        chunks.clear();
+        Practice.get().getLogger().info("Successfully unloaded all chunks.");
     }
 
 }

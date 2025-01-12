@@ -19,6 +19,14 @@ public class MatchManager {
 
     }
 
+    public void onDisable(){
+        for (Kit kit : matchMap.keySet()) {
+            for (Match match : matchMap.get(kit)) {
+                match.endMatch(true);
+            }
+        }
+    }
+
     public void removeMatch(Match match){
 
         // open arena to the rest of the world!!!

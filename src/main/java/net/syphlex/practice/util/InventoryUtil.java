@@ -16,6 +16,15 @@ public class InventoryUtil {
 
         final Profile profile = Practice.get().getProfileManager().get(player);
 
+        if (profile == null) {
+            return;
+        }
+
+        if (profile.isInQueue()) {
+            setQueuedInventory(player);
+            return;
+        }
+
         if (profile.isInParty()) {
             setPartyInventory(player);
             return;
@@ -28,6 +37,7 @@ public class InventoryUtil {
         player.getInventory().setItem(3, ItemUtil.getEventHostItem());
         //player.getInventory().setItem(1, ItemUtil.getBotMatchItem());
         player.getInventory().setItem(5, ItemUtil.getCreatePartyItem());
+        player.getInventory().setItem(6, ItemUtil.getLayoutEditorItem());
         player.getInventory().setItem(7, ItemUtil.getLeaderboardsItem());
         player.getInventory().setItem(8, ItemUtil.getSettingsItem());
     }

@@ -1,13 +1,16 @@
 package net.syphlex.practice.manager.scoreboard;
 
+import fr.mrmicky.fastboard.FastBoard;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.kit.impl.BoxingKit;
 import net.syphlex.practice.manager.kit.impl.BridgeKit;
 import net.syphlex.practice.manager.profile.Profile;
+import net.syphlex.practice.manager.profile.objects.PlayerSettings;
 import net.syphlex.practice.util.StringUtil;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.util.StringUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -27,6 +30,15 @@ public class ScoreboardManager {
                     // scoreboard either not loaded yet or is disabled
                     if (profile.getScoreboard() == null) {
                         continue;
+                    }
+
+                    if (!profile.getSetting(PlayerSettings.SCOREBOARD)) {
+                        if (!profile.getScoreboard().isDeleted()) {
+                            profile.getScoreboard().delete();
+                        }
+                        continue;
+                    } else if (profile.getScoreboard().isDeleted()) {
+                        profile.setScoreboard(new FastBoard(profile.getPlayer()));
                     }
 
                     profile.getScoreboard().updateTitle(StringUtil.CC(Practice.PRIMARY_COLOR + "&lSyphlex &7❘ &fPractice"));
@@ -74,6 +86,10 @@ public class ScoreboardManager {
 
         if (profile.isInParty() && profile.isInMatch()) {
             lines.add("&f&m-------------------"); // Top
+            lines.add(Practice.PRIMARY_COLOR + "» "
+                    + Practice.SECONDARY_COLOR
+                    + "Kit: " + Practice.PRIMARY_COLOR
+                    + ChatColor.stripColor(profile.getMatch().getKit().getName()));
             lines.add(Practice.PRIMARY_COLOR + "» "
                     + Practice.SECONDARY_COLOR
                     + "Your Ping: " + Practice.PRIMARY_COLOR

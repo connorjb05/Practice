@@ -151,7 +151,8 @@ public class ArenaCmd extends AbstractCmd {
 
             profile.sendMessage(Practice.PRIMARY_COLOR + "&lArenas:");
             for (String arenaName : Practice.get().getArenaManager().getArenaMap().keySet()) {
-                profile.sendMessage( Practice.PRIMARY_COLOR + " » " + Practice.SECONDARY_COLOR + arenaName);
+                profile.sendMessage( Practice.PRIMARY_COLOR + " » " + Practice.SECONDARY_COLOR + arenaName
+                        + ": " + (Practice.get().getArenaManager().getArenaMap().get(arenaName).isOpen() ? "&aOpen" : "&cIn Use"));
             }
 
         } else if (args.length == 3 && args[0].equalsIgnoreCase("addkit")) {

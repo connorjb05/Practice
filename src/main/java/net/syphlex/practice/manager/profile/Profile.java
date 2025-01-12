@@ -5,26 +5,24 @@ import com.ngxdev.knockback.KnockbackProfile;
 import fr.mrmicky.fastboard.FastBoard;
 import lombok.Getter;
 import lombok.Setter;
-import net.citizensnpcs.api.CitizensAPI;
-import net.minecraft.server.v1_8_R3.IChatBaseComponent;
-import net.minecraft.server.v1_8_R3.Packet;
-import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
+import net.minecraft.server.v1_8_R3.*;
+import org.bukkit.inventory.ItemStack;
 import net.syphlex.practice.Practice;
-import net.syphlex.practice.manager.bot.Bot;
 import net.syphlex.practice.manager.kit.Kit;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.party.Party;
+import net.syphlex.practice.manager.profile.objects.DuelRequests;
+import net.syphlex.practice.manager.profile.objects.PlayerSettings;
+import net.syphlex.practice.manager.profile.objects.PlayerState;
 import net.syphlex.practice.util.*;
-import net.minecraft.server.v1_8_R3.EntityPlayer;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Setter
 @Getter
@@ -32,9 +30,12 @@ public class Profile {
     private final Player player;
     private final EntityPlayer entityPlayer;
 
-    private final Map<Party, Long> partyInvitations = new HashMap<>();
+    private final Object fileLock = new Object();
 
-    private final Map<UUID, Match> duelRequests = new HashMap<>();
+    private final Map<Party, Long> partyInvitations = new HashMap<>();
+    private final Map<Kit, ItemStack[]> kitPresets = new HashMap<>();
+
+    private final DuelRequests duelRequests = new DuelRequests();
 
     private final boolean[] settings = new boolean[PlayerSettings.values().length];
 
@@ -54,9 +55,11 @@ public class Profile {
 
     private int hits;
 
-    private boolean partyChat = false;
+    private boolean partyChat = false, build = false;
 
     private Profile lastAttacker = null;
+
+    private long enderpearlCooldown = -1, lastPearlUseTime = -1;
 
     public Profile(final Player player) {
         this.player = player;
@@ -64,6 +67,51 @@ public class Profile {
 
         scoreboard = new FastBoard(player);
         scoreboard.updateTitle(StringUtil.CC(Practice.PRIMARY_COLOR + "&lSyphlex &7❘ &fPractice"));
+    }
+
+    public void saveKitPreset(Kit kit, ItemStack[] inventory){
+        kitPresets.putIfAbsent(kit, inventory);
+    }
+
+    public ItemStack[] getKitPreset(Kit kit){
+        return kitPresets.getOrDefault(kit, null);
+    }
+
+    public void startEnderpearlCooldown(){
+        // 14 is actually 15 seconds
+        enderpearlCooldown = System.currentTimeMillis() + (long) (14 * 1000);
+        player.setExp(0.99f);
+
+        new BukkitRunnable(){
+            @Override
+            public void run(){
+
+                if (!player.isOnline()) {
+                    this.cancel();
+                    return;
+                }
+
+                if (isOnEnderpearlCooldown()) {
+                    if (player.getGameMode() != GameMode.CREATIVE) {
+                        player.setExp(player.getExp() - 0.99f / ((float)(14.0 * 20.0) / 2.0f));
+                    } else {
+                        player.setLevel(0);
+                        player.setExp(0);
+                        enderpearlCooldown = -1;
+                        this.cancel();
+                    }
+                } else {
+                    player.setLevel(0);
+                    player.setExp(0);
+                    enderpearlCooldown = -1;
+                    this.cancel();
+                }
+            }
+        }.runTaskTimerAsynchronously(Practice.get(), 0L, 2L);
+    }
+
+    public boolean isOnEnderpearlCooldown(){
+        return enderpearlCooldown > System.currentTimeMillis();
     }
 
     public boolean getSetting(PlayerSettings setting){
@@ -148,6 +196,7 @@ public class Profile {
     }
 
     public void closeMenu(){
+        menu.onCloseEvent(this);
         menu = null;
     }
 

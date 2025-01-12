@@ -2,6 +2,7 @@ package net.syphlex.practice.command;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.profile.Profile;
+import net.syphlex.practice.manager.profile.objects.PlayerSettings;
 import net.syphlex.practice.util.AbstractCmd;
 import net.syphlex.practice.util.Messages;
 import net.syphlex.practice.util.Permissions;
@@ -67,6 +68,11 @@ public class PartyCmd extends AbstractCmd {
                 if (!profile.getParty().isLeader(profile)
                         && !profile.getParty().isAllInvite()) {
                 profile.sendMessage("&cParty all-invite must be enabled or you must be the party leader to invite players.");
+                    return;
+                }
+
+                if (!target.getSetting(PlayerSettings.PARTY_INVITES)) {
+                    profile.sendMessage("&cThis player has party invitations disabled.");
                     return;
                 }
 

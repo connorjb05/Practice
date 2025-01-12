@@ -9,12 +9,14 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 public class BridgeKit extends Kit {
+
+
     public BridgeKit(String name) {
         super(name);
 
         menuIcon = new ItemBuilder()
                 .setMaterial(Material.STAINED_CLAY)
-                .setName(Practice.PRIMARY_COLOR + "Bridges")
+                .setName(Practice.PRIMARY_COLOR + "Bridge")
                 .build();
 
         armor = new ItemStack[4];
@@ -22,13 +24,22 @@ public class BridgeKit extends Kit {
 
         inventory[0] = new ItemBuilder()
                 .setMaterial(Material.IRON_SWORD)
-                .build();
-        inventory[1] = new ItemBuilder()
-                .setMaterial(Material.STAINED_CLAY)
-                .setAmount(64)
+                .setUnbreakable(true)
                 .build();
         inventory[2] = new ItemBuilder()
                 .setMaterial(Material.DIAMOND_PICKAXE)
+                .setUnbreakable(true)
+                .build();
+        inventory[4] = new ItemBuilder()
+                .setMaterial(Material.BOW)
+                .setUnbreakable(true)
+                .build();
+        inventory[6] = new ItemBuilder()
+                .setMaterial(Material.ARROW)
+                .build();
+        inventory[5] = new ItemBuilder()
+                .setMaterial(Material.GOLDEN_APPLE)
+                .setAmount(8)
                 .build();
     }
 }

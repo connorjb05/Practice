@@ -1,23 +1,16 @@
-package net.syphlex.practice.manager.menu.impl;
+package net.syphlex.practice.manager.menu.impl.bot;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.arena.Arena;
-import net.syphlex.practice.manager.bot.Bot;
-import net.syphlex.practice.manager.bot.BotDifficulty;
-import net.syphlex.practice.manager.bot.traits.NoDebuffBotTrait;
 import net.syphlex.practice.manager.kit.Kit;
-import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.ItemBuilder;
-import net.syphlex.practice.util.StringUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 public class BotDifficultyMenu extends Menu {
 

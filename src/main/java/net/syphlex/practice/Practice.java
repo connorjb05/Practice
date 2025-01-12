@@ -20,6 +20,7 @@ import net.syphlex.practice.command.ArenaCmd;
 import net.syphlex.practice.command.PartyCmd;
 import net.syphlex.practice.command.SetMainSpawnCmd;
 import net.syphlex.practice.listener.PlayerListener;
+import net.syphlex.practice.manager.system.ThreadManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -31,11 +32,13 @@ public class Practice extends JavaPlugin {
     public static final String PRIMARY_COLOR = "&b";
     public static final String SECONDARY_COLOR = "&f";
     public static final String TERTIARY_COLOR = "&3";
+    public static final String QUATERNARY_COLOR = "&e";
 
+    private final ThreadManager threadManager = new ThreadManager();
     private final ConfigManager configManager = new ConfigManager();
     private final ScoreboardManager scoreboardManager = new ScoreboardManager();
-    private final ProfileManager profileManager = new ProfileManager();
     private final KitManager kitManager = new KitManager();
+    private final ProfileManager profileManager = new ProfileManager();
     private final ArenaManager arenaManager = new ArenaManager();
     private final ChunkManager chunkManager = new ChunkManager();
     private final MatchManager matchManager = new MatchManager();
@@ -55,8 +58,8 @@ public class Practice extends JavaPlugin {
 
         configManager.onEnable();
         scoreboardManager.onEnable();
-        profileManager.onEnable();
         kitManager.onEnable();
+        profileManager.onEnable();
         arenaManager.onEnable();
         chunkManager.onEnable();
         matchManager.onEnable();
@@ -73,6 +76,8 @@ public class Practice extends JavaPlugin {
         new PartyCmd("party");
         new SpectateCmd("spectate");
         new SpawnCmd("spawn");
+        new BuildCmd("build");
+        new DuelCmd("duel");
     }
 
     @Override
@@ -82,11 +87,14 @@ public class Practice extends JavaPlugin {
             getDataFolder().mkdirs();
         }
 
+        matchManager.onDisable();
         leaderboardManager.onDisable();
         queueManager.onDisable();
+        chunkManager.onDisable();
         arenaManager.onDisable();
         profileManager.onDisable();
         configManager.onDisable();
+        threadManager.onDisable();
     }
 
     public static Practice get(){

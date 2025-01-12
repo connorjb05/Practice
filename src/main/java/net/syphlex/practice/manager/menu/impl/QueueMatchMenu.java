@@ -16,12 +16,15 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class QueueMatchMenu extends Menu {
+
+    private final BukkitTask task;
 
     public QueueMatchMenu() {
         super("Queue Match", 27);
@@ -30,7 +33,7 @@ public class QueueMatchMenu extends Menu {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)15));
         }
 
-        new BukkitRunnable(){
+        task = new BukkitRunnable(){
             @Override
             public void run(){
                 int slot = 10;
@@ -70,6 +73,11 @@ public class QueueMatchMenu extends Menu {
                 }
             }
         }.runTaskTimer(Practice.get(), 0L, 40L);
+    }
+
+    @Override
+    public void onCloseEvent(Profile profile){
+        task.cancel();
     }
 
     @Override

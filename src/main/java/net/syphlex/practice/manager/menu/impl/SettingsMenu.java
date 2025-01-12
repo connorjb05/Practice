@@ -1,13 +1,9 @@
 package net.syphlex.practice.manager.menu.impl;
 
+import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.menu.Menu;
-import net.syphlex.practice.manager.profile.PlayerSettings;
-import net.syphlex.practice.manager.profile.Profile;
-import net.syphlex.practice.util.StringUtil;
-import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.manager.menu.Menu;
-import net.syphlex.practice.manager.profile.PlayerSettings;
+import net.syphlex.practice.manager.profile.objects.PlayerSettings;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.StringUtil;
 import org.bukkit.Material;
@@ -49,7 +45,9 @@ public class SettingsMenu extends Menu {
 
                 lore.add("&f&m---------------------------");
                 lore.add(" ");
-                lore.add(" &6* &fEnabled: &aYes");
+                lore.addAll(setting.getDescription());
+                lore.add(" ");
+                lore.add(Practice.PRIMARY_COLOR + " » " + Practice.SECONDARY_COLOR + "Enabled: &aYes");
                 lore.add(" ");
                 lore.add("&cClick to disable this setting.");
                 lore.add("&f&m---------------------------");
@@ -59,9 +57,11 @@ public class SettingsMenu extends Menu {
 
                 lore.add("&f&m---------------------------");
                 lore.add(" ");
-                lore.add(" &6* &fEnabled: &cNo");
+                lore.addAll(setting.getDescription());
                 lore.add(" ");
-                lore.add("&aClick to disable this setting.");
+                lore.add(Practice.PRIMARY_COLOR + " » " + Practice.SECONDARY_COLOR + "Enabled: &cNo");
+                lore.add(" ");
+                lore.add("&aClick to enable this setting.");
                 lore.add("&f&m---------------------------");
             }
 
@@ -100,7 +100,9 @@ public class SettingsMenu extends Menu {
 
                     lore.add("&f&m---------------------------");
                     lore.add(" ");
-                    lore.add(" &6* &fEnabled: &aYes");
+                    lore.addAll(setting.getDescription());
+                    lore.add(" ");
+                    lore.add(Practice.PRIMARY_COLOR + " » " + Practice.SECONDARY_COLOR + "Enabled: &aYes");
                     lore.add(" ");
                     lore.add("&cClick to disable this setting.");
                     lore.add("&f&m---------------------------");
@@ -112,7 +114,9 @@ public class SettingsMenu extends Menu {
 
                     lore.add("&f&m---------------------------");
                     lore.add(" ");
-                    lore.add(" &6* &fEnabled: &cNo");
+                    lore.addAll(setting.getDescription());
+                    lore.add(" ");
+                    lore.add(Practice.PRIMARY_COLOR + " » " + Practice.SECONDARY_COLOR + "Enabled: &cNo");
                     lore.add(" ");
                     lore.add("&aClick to enable this setting.");
                     lore.add("&f&m---------------------------");

@@ -9,6 +9,13 @@ import org.bukkit.inventory.ItemStack;
 @UtilityClass
 public class ItemUtil {
 
+    public ItemStack getPlayAgainItem(){
+        return new ItemBuilder()
+                .setMaterial(Material.PAPER)
+                .setName(Practice.PRIMARY_COLOR + "Play Again &7(Right Click)")
+                .build();
+    }
+
     public ItemStack getQueueMatchItem(){
         return new ItemBuilder()
                 .setName(Practice.PRIMARY_COLOR + "Queue Match &7(Right Click)")
@@ -36,6 +43,13 @@ public class ItemUtil {
         return new ItemBuilder()
                 .setName(Practice.PRIMARY_COLOR + "Create Party &7(Right Click)")
                 .setMaterial(Material.NAME_TAG)
+                .build();
+    }
+
+    public ItemStack getLayoutEditorItem(){
+        return new ItemBuilder()
+                .setName(Practice.PRIMARY_COLOR + "Layout Editor &7(Right Click)")
+                .setMaterial(Material.BOOK)
                 .build();
     }
 
@@ -96,10 +110,10 @@ public class ItemUtil {
                 .build();
     }
 
-    public ItemStack getBookKit(){
+    public ItemStack getBookKit(Kit kit){
         return new ItemBuilder()
                 .setMaterial(Material.ENCHANTED_BOOK)
-                .setName(Practice.PRIMARY_COLOR + "Default Kit")
+                .setName(Practice.PRIMARY_COLOR + kit.getName() + " Kit")
                 .build();
     }
 }

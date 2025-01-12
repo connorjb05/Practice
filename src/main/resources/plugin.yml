@@ -13,3 +13,6 @@ commands:
   spectate:
     aliases: [spec]
   spawn:
+  build:
+  duel:
+    aliases: [d]
