@@ -49,4 +49,16 @@ public class PlayerUtil {
         }
     }
 
+    public void hidePlayer(Player player, Player target){
+        if (player.canSee(target)) {
+            player.hidePlayer(target);
+        }
+    }
+
+    public void showPlayer(Player player, Player target){
+        if (!player.canSee(target)) {
+            player.showPlayer(target);
+        }
+    }
+
 }

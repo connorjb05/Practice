@@ -15,6 +15,7 @@ import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.InventoryUtil;
 import net.syphlex.practice.util.ItemUtil;
 import net.syphlex.practice.util.PlayerUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -108,11 +109,7 @@ public class Match {
         arena.setOpen(false);
 
         // party event match if this is true
-        if (party != null
-                || teamOneParam == null
-                || teamTwoParam == null
-                || teamOneParam.isEmpty()
-                || teamTwoParam.isEmpty()) {
+        if (party != null) {
 
             // Create list of members include the party leader
             List<Profile> partyMembers = new ArrayList<>(party.getMembers());
@@ -130,23 +127,34 @@ public class Match {
                 } else {
                     teamTwo.put(profile, true);
                 }
+
+                prepareProfile(profile);
+                Practice.get().getQueueManager().removeFromQueueMap(profile);
+
                 i++;
             }
 
         } else {
+
             teamOneParam.forEach(profile -> {
                 teamOne.put(profile, true);
                 profileMap.put(profile, true);
+
+                prepareProfile(profile);
+                for (Profile others : teamTwoParam) {
+                    PlayerUtil.showPlayer(profile.getPlayer(), others.getPlayer());
+                }
             });
 
             teamTwoParam.forEach(profile -> {
                 teamTwo.put(profile, true);
                 profileMap.put(profile, true);
-            });
-        }
 
-        for (Profile profile : profileMap.keySet()) {
-            prepareProfile(profile);
+                prepareProfile(profile);
+                for (Profile others : teamOneParam) {
+                    PlayerUtil.showPlayer(profile.getPlayer(), others.getPlayer());
+                }
+            });
         }
 
         startMatch();
@@ -243,6 +251,7 @@ public class Match {
             profile.setHits(0);
 
             if (queuedMatch) {
+
                 int loserElo = Practice.get().getLeaderboardManager().getElo(profile.getPlayer().getUniqueId(), kit);
                 int winnerElo = Practice.get().getLeaderboardManager().getElo(winner.getPlayer().getUniqueId(), kit);
 
@@ -422,10 +431,10 @@ public class Match {
                                     }
                                 }
 
-                                profile.sendMessage(Practice.SECONDARY_COLOR
+                                profile.sendMessage(Practice.QUATERNARY_COLOR
                                         + "Match starting in "
                                         + Practice.PRIMARY_COLOR + (duration + 1)
-                                        + Practice.SECONDARY_COLOR + " seconds...");
+                                        + Practice.QUATERNARY_COLOR + " seconds...");
                                 profile.sendTitle(
                                         Practice.PRIMARY_COLOR + "&l" + (duration + 1),
                                         0, 10, 5);
@@ -439,7 +448,7 @@ public class Match {
                             ffaAlive.forEach(profile -> {
                                 profile.sendMessage("&aMatch started!");
                                 profile.sendTitle(
-                                        "&c&lFight!",
+                                        "&c",
                                         0, 10, 5);
                             });
 
@@ -517,12 +526,12 @@ public class Match {
                                     }
                                 }
 
-                                profile.sendMessage(Practice.SECONDARY_COLOR
+                                profile.sendMessage(Practice.QUATERNARY_COLOR
                                         + "Match starting in "
                                         + Practice.PRIMARY_COLOR + (duration + 1)
-                                        + Practice.SECONDARY_COLOR + " seconds...");
+                                        + Practice.QUATERNARY_COLOR + " seconds...");
                                 profile.sendTitle(
-                                        Practice.PRIMARY_COLOR + "&l" + (duration + 1),
+                                        "&c&l" + (duration + 1),
                                         0, 10, 5);
                             });
 
@@ -565,12 +574,12 @@ public class Match {
                                     }
                                 }
 
-                                profile.sendMessage(Practice.SECONDARY_COLOR
+                                profile.sendMessage(Practice.QUATERNARY_COLOR
                                         + "Match starting in "
                                         + Practice.PRIMARY_COLOR + (duration + 1)
-                                        + Practice.SECONDARY_COLOR + " seconds...");
+                                        + Practice.QUATERNARY_COLOR + " seconds...");
                                 profile.sendTitle(
-                                        Practice.PRIMARY_COLOR + "&l" + (duration + 1),
+                                        "&c&l" + (duration + 1),
                                         0, 10, 5);
                             });
                         }
@@ -582,14 +591,14 @@ public class Match {
                             teamOneAlive.forEach(profile -> {
                                 profile.sendMessage("&aMatch started!");
                                 profile.sendTitle(
-                                        "&c&lFight!",
+                                        "&c",
                                         0, 10, 5);
                             });
 
                             teamTwoAlive.forEach(profile -> {
                                 profile.sendMessage("&aMatch started!");
                                 profile.sendTitle(
-                                        "&c&lFight!",
+                                        "&c",
                                         0, 10, 5);
                             });
 
@@ -621,12 +630,20 @@ public class Match {
         duration = 3;
         matchState = MatchState.ENDED;
 
-
-        if (party == null && !ffa) {
+        if (party == null && !ffa && queuedMatch) {
             profileMap.keySet().forEach(profile -> {
                 profile.getPlayer().getInventory().setItem(0, ItemUtil.getPlayAgainItem());
             });
         }
+
+        profileMap.keySet().forEach(profile -> {
+            profile.setLastMatchKit(kit);
+            profile.setMatch(null);
+            profile.setHits(0);
+            profile.setLastAttacker(null);
+            profile.setKnockback(KnockbackModule.getDefault().title);
+            Practice.get().getQueueManager().getPlayersInMatch().remove(profile);
+        });
 
         matchTask = new BukkitRunnable(){
             @Override
@@ -653,18 +670,28 @@ public class Match {
     }
 
     private void handleEnded(Profile profile){
-        if (profile.getPlayer().isOnline()) {
+        if (profile.getPlayer().isOnline() && !profile.isInMatch()) {
             profile.teleport(Practice.get().getConfigManager().getMainSpawn());
             profile.setPlayerState(PlayerState.IN_SPAWN);
-            profile.setMatch(null);
-            profile.setLastAttacker(null);
-            profile.setKnockback(KnockbackModule.getDefault().title);
+            //profile.setMatch(null);
+            //profile.setHits(0);
+            //profile.setLastAttacker(null);
+            //profile.setKnockback(KnockbackModule.getDefault().title);
             PlayerUtil.resetPlayer(profile.getPlayer());
+
+            for (Profile others : Practice.get().getProfileManager().getProfileMap().values()) {
+                if (others != profile) {
+                    PlayerUtil.showPlayer(profile.getPlayer(), others.getPlayer());
+                }
+            }
 
             Practice.get().getProfileManager().getProfileMap().values()
                     .forEach(others -> {
                         if (profile != others) {
-                            others.getPlayer().showPlayer(profile.getPlayer());
+                            PlayerUtil.showPlayer(others.getPlayer(), profile.getPlayer());
+                            PlayerUtil.showPlayer(profile.getPlayer(), others.getPlayer());
+                            //profile.getPlayer().showPlayer(others.getPlayer());
+                            //others.getPlayer().showPlayer(profile.getPlayer());
                         }
                     });
 
@@ -675,7 +702,6 @@ public class Match {
             }
         }
 
-        Practice.get().getQueueManager().getPlayersInMatch().remove(profile);
     }
 
     public boolean isTeamOne(Profile profile){

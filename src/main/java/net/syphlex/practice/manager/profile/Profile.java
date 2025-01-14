@@ -45,7 +45,7 @@ public class Profile {
 
     private Menu menu = null;
 
-    private Kit kitQueued = null;
+    private Kit kitQueued = null, lastMatchKit = null;
 
     private Match match = null;
 
@@ -217,6 +217,10 @@ public class Profile {
 
     public boolean isInMatch(){
         return match != null;
+    }
+
+    public boolean hasLastMatchKit(){
+        return lastMatchKit != null;
     }
 
     public boolean isSpectatingMatch(){

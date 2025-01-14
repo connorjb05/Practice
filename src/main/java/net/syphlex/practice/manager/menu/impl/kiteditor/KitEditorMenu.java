@@ -61,8 +61,10 @@ public class KitEditorMenu extends Menu {
 
             switch (e.getSlot()) {
                 case 11:
-                    profile.getKitPresets().put(kit, profile.getPlayer().getInventory().getContents());
+                    profile.saveKitPreset(kit, profile.getPlayer().getInventory().getContents());
+                    //profile.getKitPresets().put(kit, profile.getPlayer().getInventory().getContents());
                     profile.sendMessage("&aSaved your " + kit.getName() + " kit layout.");
+                    profile.sendMessage("&7You may close out of the menu.");
                     break;
                 case 13:
                     profile.getPlayer().getInventory().setContents(kit.getInventory());

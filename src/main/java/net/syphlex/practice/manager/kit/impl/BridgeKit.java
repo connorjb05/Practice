@@ -6,6 +6,7 @@ import net.syphlex.practice.util.ItemBuilder;
 import net.syphlex.practice.manager.kit.Kit;
 import net.syphlex.practice.util.ItemBuilder;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
 public class BridgeKit extends Kit {
@@ -28,6 +29,7 @@ public class BridgeKit extends Kit {
                 .build();
         inventory[2] = new ItemBuilder()
                 .setMaterial(Material.DIAMOND_PICKAXE)
+                .addVanillaEnchant(Enchantment.DIG_SPEED, 2)
                 .setUnbreakable(true)
                 .build();
         inventory[4] = new ItemBuilder()

@@ -7,6 +7,7 @@ import net.syphlex.practice.manager.kit.Kit;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.InventoryUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
 import java.util.*;
@@ -40,9 +41,9 @@ public class QueueManager {
 
                     for (Profile queued : queueMap.get(kit)) {
                         queued.sendMessage(" ");
-                        queued.sendMessage(Practice.SECONDARY_COLOR + "You are currently in the "
+                        queued.sendMessage(Practice.QUATERNARY_COLOR + "You are currently in the "
                                 + Practice.PRIMARY_COLOR + ChatColor.stripColor(kit.getName())
-                                + Practice.SECONDARY_COLOR + " queue.");
+                                + Practice.QUATERNARY_COLOR + " queue.");
                         queued.sendMessage("&7Searching for a match...");
                         queued.sendMessage(" ");
                     }
@@ -68,12 +69,20 @@ public class QueueManager {
                             p1.sendMessage("&cNo arena was found.");
                             p2.sendMessage("&cNo arena was found.");
 
-                            InventoryUtil.setSpawnInventory(p1.getPlayer());
-                            InventoryUtil.setSpawnInventory(p2.getPlayer());
-
                             p1.setKitQueued(null);
                             p2.setKitQueued(null);
 
+                            InventoryUtil.setSpawnInventory(p1.getPlayer());
+                            InventoryUtil.setSpawnInventory(p2.getPlayer());
+                            continue;
+                        }
+
+                        if (p1.isInMatch() || p2.isInMatch()) {
+                            if (p1.isInMatch()) {
+                                removeFromQueueMap(p1);
+                            } else {
+                                removeFromQueueMap(p2);
+                            }
                             continue;
                         }
 
@@ -101,12 +110,13 @@ public class QueueManager {
         executor.shutdownNow();
     }
 
-    public void queue(Profile profile, Kit kit) {
+    public synchronized void queue(Profile profile, Kit kit) {
 
         if (kit.inventory == null || kit.armor == null) {
             profile.sendMessage("&cThere was an error while trying to queue for this kit.");
             return;
         }
+
         if (!queueMap.get(kit).contains(profile)) {
 
             profile.sendMessage(" ");
@@ -128,7 +138,7 @@ public class QueueManager {
         }
     }
 
-    public void dequeue(Profile profile) {
+    public synchronized void dequeue(Profile profile) {
 
         if (profile.getKitQueued() == null) {
             return;
@@ -148,6 +158,16 @@ public class QueueManager {
         if (!profile.isInMatch()) {
             InventoryUtil.setSpawnInventory(profile.getPlayer());
         }
+    }
+
+    public void removeFromQueueMap(Profile profile){
+
+        if (profile.getKitQueued() == null) {
+            return;
+        }
+
+        queueMap.get(profile.getKitQueued()).remove(profile);
+        profile.setKitQueued(null);
     }
 
     public int getInQueue(Kit kit){

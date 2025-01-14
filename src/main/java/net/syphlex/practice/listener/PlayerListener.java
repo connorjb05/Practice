@@ -2,6 +2,7 @@ package net.syphlex.practice.listener;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
+import net.syphlex.practice.event.ProfileDamageEvent;
 import net.syphlex.practice.manager.kit.impl.BoxingKit;
 import net.syphlex.practice.manager.kit.impl.BridgeKit;
 import net.syphlex.practice.manager.kit.impl.SumoKit;
@@ -20,7 +21,9 @@ import net.syphlex.practice.util.Messages;
 import net.syphlex.practice.util.Permissions;
 import net.syphlex.practice.util.PlayerUtil;
 import org.bukkit.*;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -38,40 +41,6 @@ import org.bukkit.util.Vector;
 import java.text.DecimalFormat;
 
 public class PlayerListener implements Listener {
-
-    @EventHandler
-    public void onPlayerJoinEvent(PlayerJoinEvent e){
-        final Player p = e.getPlayer();
-
-        e.setJoinMessage(null);
-
-        Practice.get().getProfileManager().join(p);
-    }
-
-    @EventHandler
-    public void onPlayerQuitEvent(PlayerQuitEvent e){
-        final Player p = e.getPlayer();
-
-        e.setQuitMessage(null);
-
-        Practice.get().getProfileManager().quit(p);
-    }
-
-    @EventHandler
-    public void onPlayerCommandPreprocessEvent(PlayerCommandPreprocessEvent e){
-
-        final Player p = e.getPlayer();
-        final Profile profile = Practice.get().getProfileManager().get(p);
-
-        if (profile.hasPermission("syphlex.admin")) {
-            return;
-        }
-
-        if (profile.isInMatch()) {
-            e.setCancelled(true);
-            profile.sendMessage("&cYou cannot issue commands while in a match.");
-        }
-    }
 
     @EventHandler
     public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent e){
@@ -96,63 +65,39 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onFoodLevelChangeEvent(FoodLevelChangeEvent e){
-
-        if (!(e.getEntity() instanceof Player)){
-            return;
-        }
-
-        final Player p = (Player) e.getEntity();
-        final Profile profile = Practice.get().getProfileManager().get(p);
-
-        if (profile.getPlayerState() == PlayerState.IN_MATCH) {
-
-            if (profile.isInMatch()) {
-                if (profile.getMatch().getKit() instanceof SumoKit
-                        || profile.getMatch().getKit() instanceof BoxingKit) {
-                    e.setFoodLevel(20);
-                    p.setSaturation(20f);
-                    e.setCancelled(true);
-                }
-            }
-
-            return;
-        }
-
-        p.setFoodLevel(20);
-        p.setSaturation(20f);
-        e.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onEntityDamageEvent(EntityDamageEvent e) {
+    public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e){
 
         if (!(e.getEntity() instanceof Player)) {
             return;
         }
 
-        final Player p = (Player) e.getEntity();
-        final Profile profile = Practice.get().getProfileManager().get(p);
+        Player attackingPlayer = null;
 
-        if (profile.getPlayerState() == PlayerState.IN_SPAWN) {
-            e.setCancelled(true);
+        if (e.getDamager() instanceof Projectile) {
+            if (((Projectile)e.getDamager()).getShooter() instanceof Player) {
+                attackingPlayer = (Player) ((Projectile)e.getDamager()).getShooter();
+            }
         }
 
-        if (profile.isInMatch()) {
+        if (e.getDamager() instanceof Player) {
+            attackingPlayer = (Player) e.getDamager();
+        }
 
-            final Match match = profile.getMatch();
+        if (attackingPlayer == null) {
+            return;
+        }
 
-            if (match.getKit() instanceof SumoKit
-                    || match.getKit() instanceof BoxingKit
-                    || match.getKit() instanceof BridgeKit) {
+        final Player victimPlayer = (Player) e.getEntity();
 
-                if (e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                        || e.getCause() == EntityDamageEvent.DamageCause.PROJECTILE) {
-                    return;
-                }
+        final Profile victimProfile = Practice.get().getProfileManager().get(victimPlayer);
+        final Profile attackerProfile = Practice.get().getProfileManager().get(attackingPlayer);
 
-                e.setCancelled(true);
-            }
+        ProfileDamageEvent damageEvent = new ProfileDamageEvent(victimProfile, attackerProfile);
+
+        Bukkit.getPluginManager().callEvent(damageEvent);
+
+        if (damageEvent.isCancelled()) {
+            e.setCancelled(true);
         }
     }
 
@@ -186,7 +131,7 @@ public class PlayerListener implements Listener {
             }
 
             // friendly fire patch
-            if (match.getTeamAlive(damagerProfile).contains(profile)) {
+            if (!match.isFfa() && match.getTeamAlive(damagerProfile).contains(profile)) {
                 e.setCancelled(true);
                 return;
             }
@@ -545,15 +490,6 @@ public class PlayerListener implements Listener {
                         profile.setLastPearlUseTime(now);
                     }
 
-                    if (e.getItem() != null && e.getItem().isSimilar(ItemUtil.getPlayAgainItem())) {
-                        if (profile.isInQueue()) {
-                            Practice.get().getQueueManager().dequeue(profile);
-                        } else {
-                            Practice.get().getQueueManager().queue(profile, profile.getMatch().getKit());
-                            break;
-                        }
-                    }
-
                     final ItemStack itemStack = p.getItemInHand();
 
                     if (profile.isInMatch()) {
@@ -564,6 +500,16 @@ public class PlayerListener implements Listener {
                     }
 
                     break;
+            }
+        }
+
+        if (a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK) {
+            if (e.getItem() != null && e.getItem().isSimilar(ItemUtil.getPlayAgainItem())) {
+                if (profile.isInQueue()) {
+                    Practice.get().getQueueManager().dequeue(profile);
+                } else {
+                    Practice.get().getQueueManager().queue(profile, profile.getLastMatchKit());
+                }
             }
         }
     }
@@ -621,19 +567,23 @@ public class PlayerListener implements Listener {
 
             Bukkit.getScheduler().runTaskLater(Practice.get(), () -> {
 
-                match.getProfileMap().forEach((profiles, alive) -> {
+                if (match.getAlivePlayers(match.getProfileMap()).size() > 2) {
+                    match.getProfileMap().forEach((profiles, alive) -> {
 
-                    // hide player that just died from alive players
-                    if (profiles != profile && alive) {
-                        profiles.getPlayer().hidePlayer(profile.getPlayer());
-                    }
+                        // hide player that just died from alive players
+                        if (profiles != profile && alive) {
+                            //PlayerUtil.hidePlayer(profiles.getPlayer(), profile.getPlayer());
+                            //profiles.getPlayer().hidePlayer(profile.getPlayer());
+                        }
 
-                    // show player that just died to all dead players
-                    if (profiles != profile && !alive) {
-                        profiles.getPlayer().showPlayer(profile.getPlayer());
-                    }
+                        // show player that just died to all dead players
+                        if (profiles != profile && !alive) {
+                            //profiles.getPlayer().showPlayer(profile.getPlayer());
+                            //PlayerUtil.showPlayer(profiles.getPlayer(), profile.getPlayer());
+                        }
 
-                });
+                    });
+                }
 
                 p.spigot().respawn();
 
@@ -665,11 +615,10 @@ public class PlayerListener implements Listener {
                     // Set the to location to be the same as from (no position change)
 
                     Location oldSpot = from.clone();
-                    oldSpot.setYaw(to.getYaw());
-                    oldSpot.setPitch(to.getPitch());
+                    //oldSpot.setYaw(to.getYaw());
+                    //oldSpot.setPitch(to.getPitch());
 
                     e.setTo(oldSpot);
-
                 }
 
                 // Prevent movement in all directions (X, Y, Z), but allow yaw/pitch changes
@@ -824,20 +773,23 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerItemConsumeEvent(PlayerItemConsumeEvent e){
+    public void onPotionEffectAddEvent(PotionEffectAddEvent e){
 
-        final Player p = e.getPlayer();
-        final Profile profile = Practice.get().getProfileManager().get(p);
+        if (!(e.getEntity() instanceof Player)) {
+            return;
+        }
+
+        final Player player = (Player) e.getEntity();
+        final Profile profile = Practice.get().getProfileManager().get(player);
 
         if (profile.isInMatch()) {
 
-            final Match match = profile.getMatch();
+            if (!(profile.getMatch().getKit() instanceof BridgeKit)){
+                return;
+            }
 
-            if (match.getKit() instanceof BridgeKit) {
-                if (e.getItem().getType() == Material.GOLDEN_APPLE) {
-                    p.setHealth(p.getMaxHealth());
-                    p.removePotionEffect(PotionEffectType.REGENERATION);
-                }
+            if (e.getEffect().getType() == PotionEffectType.REGENERATION) {
+                e.setCancelled(true);
             }
         }
     }

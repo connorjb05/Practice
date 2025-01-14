@@ -3,11 +3,144 @@ package net.syphlex.practice.util;
 import lombok.experimental.UtilityClass;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.kit.Kit;
+import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 
 @UtilityClass
 public class ItemUtil {
+
+    public List<String> serializeItemStack(ItemStack[] itemStacks){
+        List<String> itemList = new ArrayList<>();
+
+        for (ItemStack itemStack : itemStacks) {
+
+            StringBuilder serializedItem = new StringBuilder();
+
+            Material material = itemStack.getType();
+            int amount = itemStack.getAmount();
+            short durability = itemStack.getDurability();
+            boolean unbreakable = false;
+
+            if (itemStack.hasItemMeta()) {
+                unbreakable = itemStack.getItemMeta().spigot().isUnbreakable();
+            }
+
+            serializedItem.append(material.name())
+                    .append(";").append(amount)
+                    .append(";").append(durability)
+                    .append(";").append(unbreakable)
+                    .append(";");
+
+            String itemAsString;
+
+            if (itemStack.getItemMeta() != null && itemStack.getItemMeta().hasEnchants()) {
+                StringBuilder enchants = new StringBuilder();
+                for (Map.Entry<Enchantment, Integer> entry : itemStack.getItemMeta().getEnchants().entrySet()) {
+                    enchants.append(entry.getKey())  // Use the NamespacedKey to avoid issues with different enchantment names
+                            .append(":").append(entry.getValue()).append(",");
+                }
+                // Remove the last comma
+                if (enchants.length() > 0) {
+                    enchants.setLength(enchants.length() - 1);  // Remove the trailing comma
+                }
+                serializedItem.append(enchants);
+            }
+
+            itemList.add(serializedItem.toString());
+        }
+
+        return itemList;
+    }
+
+    public ItemStack[] deserializeItemStack(List<String> strings){
+
+        ItemStack[] itemStacks = new ItemStack[strings.size()];
+
+        for (int i = 0; i < strings.size(); i++) {
+
+            String[] split = strings.get(i).split(";");
+
+            String nameAsString = split[0];
+            String amountAsString = split[1];
+            String durabilityAsString = split[2];
+            String unbreakableAsString = split[3];
+
+            Map< Enchantment, Integer> enchantmentMap = new HashMap<>();
+            // split enchantments format ('PROTECTION_ENVIRONMENTAL:1,DAMAGE_ALL:1')
+            if (split.length > 4) {
+
+                // as a string value it is displayed: 'DAMAGE_ALL:1' per enchant here:
+                String[] enchantmentsSplit = split[4].split(",");
+
+                // use for loop to dissect each enchantment
+                for (String s : enchantmentsSplit) {
+
+                    // split individual enchants into enchant name and level
+                    String[] individualEnchantSplit = s.split(":");
+
+                    String enchantName = individualEnchantSplit[0];
+                    int level = Integer.parseInt(individualEnchantSplit[1]);
+
+                    enchantmentMap.put(Enchantment.getByName(enchantName), level);
+                }
+            }
+
+            Material material = Material.getMaterial(nameAsString);
+
+            if (material == null) {
+                Practice.get().getLogger().log(Level.SEVERE, "Material not found, parsing as AIR.");
+                material = Material.AIR;
+            }
+
+            int amount;
+
+            if (!NumberUtils.isNumber(amountAsString)) {
+                Practice.get().getLogger().log(Level.SEVERE, "Amount was not a number, parsing as 1.");
+                amount = 1;
+            } else {
+                amount = Integer.parseInt(amountAsString);
+            }
+
+            short durability;
+
+            if (!NumberUtils.isNumber(durabilityAsString)) {
+                Practice.get().getLogger().log(Level.SEVERE, "Durability was not a number, parsing as 0.");
+                durability = 0;
+            } else {
+                durability = Short.parseShort(durabilityAsString);
+            }
+
+            boolean unbreakable = false;
+
+            if (unbreakableAsString.equalsIgnoreCase("true")) {
+                unbreakable = true;
+            }
+
+            ItemStack itemStack = new ItemBuilder()
+                    .setMaterial(material)
+                    .setAmount(amount)
+                    .setDurability(durability)
+                    .setUnbreakable(unbreakable)
+                    .build();
+
+            if (!enchantmentMap.isEmpty()) {
+                for (Map.Entry<Enchantment, Integer> entry : enchantmentMap.entrySet()) {
+                    itemStack.addUnsafeEnchantment(entry.getKey(), entry.getValue());
+                }
+            }
+
+            itemStacks[i] = itemStack;
+        }
+        return itemStacks;
+    }
 
     public ItemStack getPlayAgainItem(){
         return new ItemBuilder()

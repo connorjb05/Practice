@@ -70,7 +70,7 @@ public class SettingsMenu extends Menu {
 
             inventory.setItem(slot, itemStack);
 
-            slot += 2;
+            slot++;
         }
     }
 
@@ -128,9 +128,10 @@ public class SettingsMenu extends Menu {
                 itemStack.setItemMeta(itemMeta);
 
                 inventory.setItem(slot, itemStack);
+                break;
             }
 
-            slot += 2;
+            slot++;
         }
     }
 }

@@ -25,7 +25,7 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.11.0</version> <!-- Use the latest stable version -->
+            <version>2.11.0</version>
         </dependency>
         <dependency>
             <groupId>net.syphlex.core</groupId>
@@ -63,11 +63,10 @@
 
     <build>
         <plugins>
-            <!-- Maven Shade Plugin to package the dependencies into the JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.1</version>  <!-- Use the latest version of the shade plugin -->
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -78,10 +77,10 @@
                 </executions>
                 <configuration>
                     <relocations>
+                        <!-- Relocate FastBoard to avoid runtime conflicts -->
                         <relocation>
                             <pattern>fr.mrmicky.fastboard</pattern>
-                            <!-- Replace 'com.yourpackage' with the package of your plugin ! -->
-                            <shadedPattern>com.yourpackage.fastboard</shadedPattern>
+                            <shadedPattern>org.example.shaded.fastboard</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>

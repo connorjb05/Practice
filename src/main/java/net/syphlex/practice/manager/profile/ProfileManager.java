@@ -5,13 +5,14 @@ import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.kit.Kit;
 import net.syphlex.practice.manager.profile.objects.PlayerSettings;
 import net.syphlex.practice.util.InventoryUtil;
+import net.syphlex.practice.util.ItemUtil;
 import net.syphlex.practice.util.PlayerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,7 +21,7 @@ public class ProfileManager {
 
     private final Map<UUID, Profile> profileMap = new ConcurrentHashMap<>();
 
-    public void onEnable(){
+    public void onEnable() {
 
         File dir = new File(Practice.get().getDataFolder(), "/userdata/");
 
@@ -31,11 +32,11 @@ public class ProfileManager {
         Bukkit.getOnlinePlayers().forEach(this::join);
     }
 
-    public void onDisable(){
+    public void onDisable() {
         profileMap.values().forEach(p -> quit(p.getPlayer()));
     }
 
-    public void join(Player player){
+    public void join(Player player) {
         Profile profile = new Profile(player);
         profileMap.put(player.getUniqueId(), profile);
 
@@ -67,6 +68,8 @@ public class ProfileManager {
                     profile.setSetting(PlayerSettings.PARTY_INVITES, config.getBoolean("settings.party_invites"));
                     profile.setSetting(PlayerSettings.PRIVATE_MESSAGES, config.getBoolean("settings.private_messages"));
                     profile.setSetting(PlayerSettings.SCOREBOARD, config.getBoolean("settings.scoreboard"));
+                    profile.setSetting(PlayerSettings.GLOBAL_CHAT, config.getBoolean("settings.global_chat"));
+                    profile.setSetting(PlayerSettings.IN_MATCH_CHAT, config.getBoolean("settings.in_match_chat"));
 
                     if (config.contains("kit-presets") && config.getConfigurationSection("kit-presets") != null) {
                         for (String kitName : config.getConfigurationSection("kit-presets").getKeys(false)) {
@@ -77,7 +80,7 @@ public class ProfileManager {
                                 List<String> inventoryData = config.getStringList(
                                         "kit-presets." + kitName + ".preset");
 
-                                ItemStack[] inventory = ItemUtil.deserializeItemStackArray(inventoryData);
+                                ItemStack[] inventory = ItemUtil.deserializeItemStack(inventoryData);
 
                                 profile.getKitPresets().put(kit, inventory);
                             }
@@ -91,7 +94,7 @@ public class ProfileManager {
         });
     }
 
-    public void quit(Player player){
+    public void quit(Player player) {
         Profile profile = profileMap.remove(player.getUniqueId());
 
         if (profile.isInMatch()) {
@@ -104,7 +107,7 @@ public class ProfileManager {
 
         Practice.get().getQueueManager().dequeue(profile);
 
-        if (profile.isInParty()){
+        if (profile.isInParty()) {
             Practice.get().getPartyManager().onLeaveOrDisband(profile);
         }
 
@@ -122,7 +125,7 @@ public class ProfileManager {
 
                 try {
 
-                    if (!userFile.exists()){
+                    if (!userFile.exists()) {
                         createUserFile(userFile);
                         return;
                     }
@@ -133,6 +136,8 @@ public class ProfileManager {
                     config.set("settings.party_invites", profile.getSetting(PlayerSettings.PARTY_INVITES));
                     config.set("settings.private_messages", profile.getSetting(PlayerSettings.PRIVATE_MESSAGES));
                     config.set("settings.scoreboard", profile.getSetting(PlayerSettings.SCOREBOARD));
+                    config.set("settings.global_chat", profile.getSetting(PlayerSettings.GLOBAL_CHAT));
+                    config.set("settings.in_match_chat", profile.getSetting(PlayerSettings.IN_MATCH_CHAT));
 
                     for (Map.Entry<Kit, ItemStack[]> entry : profile.getKitPresets().entrySet()) {
 
@@ -140,7 +145,7 @@ public class ProfileManager {
                         ItemStack[] inventory = entry.getValue();
 
                         config.set("kit-presets." + kit.getName() + ".preset",
-                                ItemUtil.serializeItemStackArray(inventory));
+                                ItemUtil.serializeItemStack(inventory));
                     }
 
                     config.save(userFile);
@@ -153,7 +158,7 @@ public class ProfileManager {
         });
     }
 
-    private void createUserFile(File userFile){
+    private void createUserFile(File userFile) {
         try {
             userFile.createNewFile();
 
@@ -163,6 +168,8 @@ public class ProfileManager {
             config.set("settings.party_invites", true);
             config.set("settings.private_messages", true);
             config.set("settings.scoreboard", true);
+            config.set("settings.global_chat", true);
+            config.set("settings.in_match_chat", true);
 
             config.save(userFile);
         } catch (Exception e) {
@@ -170,7 +177,8 @@ public class ProfileManager {
         }
     }
 
-    public Profile get(Player p){
+    public Profile get(Player p) {
         return profileMap.get(p.getUniqueId());
     }
 }
+

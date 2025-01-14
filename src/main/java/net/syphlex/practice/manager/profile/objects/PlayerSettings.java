@@ -25,7 +25,7 @@ public enum PlayerSettings {
             "&7Allow parties to send you",
             "&7party invitations.")),
     PRIVATE_MESSAGES("Private Messages", new ItemBuilder()
-            .setMaterial(Material.PAPER)
+            .setMaterial(Material.BOOK_AND_QUILL)
             .setName(Practice.PRIMARY_COLOR + "&lPrivate Messages")
             .build(), Arrays.asList(
             "&7Allow players to privately",
@@ -34,7 +34,23 @@ public enum PlayerSettings {
             .setMaterial(Material.PAINTING)
             .setName(Practice.PRIMARY_COLOR + "&lScoreboard")
             .build(), Collections.singletonList(
-            "&7Toggle your sidebar visibility."));
+            "&7Toggle your sidebar visibility.")),
+    GLOBAL_CHAT("Global Chat", new ItemBuilder()
+            .setMaterial(Material.PAPER)
+            .setName(Practice.PRIMARY_COLOR + "&lGlobal Chat")
+            .build(), Collections.singletonList("&7See public messages.")),
+    IN_MATCH_CHAT("In Match Chat", new ItemBuilder()
+            .setMaterial(Material.MAP)
+            .setName(Practice.PRIMARY_COLOR + "&lIn Match Chat")
+            .build(), Collections.singletonList("&7See in-match messages.")),
+    KILL_EFFECTS("Kill Effects", new ItemBuilder()
+            .setMaterial(Material.SKULL_ITEM)
+            .setName(Practice.PRIMARY_COLOR + "&lKill Effects")
+            .build(), Arrays.asList(
+            "&7Effects that play after",
+            "&7wins or kills.",
+            "&7",
+            "&cRequires <rank> rank."));
 
     private final String name;
     private final ItemStack menuIcon;
