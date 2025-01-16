@@ -1,5 +1,6 @@
 package net.syphlex.practice.manager.party;
 
+import lombok.Getter;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.InventoryUtil;
@@ -11,6 +12,7 @@ import net.syphlex.practice.util.PlayerUtil;
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 public class PartyManager {
 
     // leader, and their party

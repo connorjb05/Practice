@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class LeaderboardsMenu extends Menu {
     public LeaderboardsMenu() {
-        super("Leaderboards", 27);
+        super("Leaderboards", 36);
 
         for (int i = 0; i < size; i++) {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)15));
@@ -67,6 +67,11 @@ public class LeaderboardsMenu extends Menu {
                 itemStack.setAmount(Math.min(Math.max(inMatch, 1), 64));
 
                 inventory.setItem(slot, itemStack);
+            }
+
+            if (slot == 16) {
+                slot = 21;
+                continue;
             }
 
             slot++;

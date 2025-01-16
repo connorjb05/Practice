@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class KitEditorSelectionMenu extends Menu {
     public KitEditorSelectionMenu() {
-        super("Select a Kit", 27);
+        super("Select a Kit", 36);
 
 
         for (int i = 0; i < size; i++) {
@@ -49,6 +49,11 @@ public class KitEditorSelectionMenu extends Menu {
                 inventory.setItem(slot, itemStack);
             }
 
+            if (slot == 16) {
+                slot = 21;
+                continue;
+            }
+
             slot++;
         }
     }
@@ -72,6 +77,11 @@ public class KitEditorSelectionMenu extends Menu {
                     profile.getPlayer().getInventory().setContents(kit.getInventory());
                 }
                 return;
+            }
+
+            if (slot == 16) {
+                slot = 21;
+                continue;
             }
 
             slot++;

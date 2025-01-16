@@ -27,7 +27,7 @@ public class QueueMatchMenu extends Menu {
     private final BukkitTask task;
 
     public QueueMatchMenu() {
-        super("Queue Match", 27);
+        super("Queue Match", 36);
 
         for (int i = 0; i < size; i++) {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)15));
@@ -69,15 +69,15 @@ public class QueueMatchMenu extends Menu {
                         inventory.setItem(slot, itemStack);
                     }
 
+                    if (slot == 16) {
+                        slot = 21;
+                        continue;
+                    }
+
                     slot++;
                 }
             }
         }.runTaskTimer(Practice.get(), 0L, 40L);
-    }
-
-    @Override
-    public void onCloseEvent(Profile profile){
-        task.cancel();
     }
 
     @Override
@@ -91,6 +91,11 @@ public class QueueMatchMenu extends Menu {
             if (e.getSlot() == slot) {
                 Practice.get().getQueueManager().queue(profile, kit);
                 profile.getPlayer().closeInventory();
+            }
+
+            if (slot == 16) {
+                slot = 21;
+                continue;
             }
 
             slot++;

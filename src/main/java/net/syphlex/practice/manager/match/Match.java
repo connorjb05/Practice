@@ -3,7 +3,6 @@ package net.syphlex.practice.manager.match;
 import com.ngxdev.knockback.KnockbackModule;
 import lombok.Getter;
 import lombok.Setter;
-import net.citizensnpcs.api.CitizensAPI;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.kit.Kit;
@@ -15,9 +14,9 @@ import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.InventoryUtil;
 import net.syphlex.practice.util.ItemUtil;
 import net.syphlex.practice.util.PlayerUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -71,11 +70,7 @@ public class Match {
 
         PlayerUtil.resetPlayer(profile.getPlayer());
 
-        if (CitizensAPI.getNPCRegistry().isNPC(profile.getPlayer())) {
-            kit.giveKit(profile);
-        } else {
-            kit.giveBookKits(profile);
-        }
+        kit.giveBookKits(profile);
 
         if (kit instanceof ComboKit) {
             profile.setKnockback("combo");
@@ -273,53 +268,53 @@ public class Match {
 
                     profile.sendMessage(" ");
                     profile.sendMessage(Practice.PRIMARY_COLOR
-                            + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
-                            + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + "."
+                            + profile.getPlayer().getName() + Practice.QUATERNARY_COLOR + " was killed by "
+                            + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.QUATERNARY_COLOR + "."
                             + " &c(" + (Practice.get().getLeaderboardManager().getElo(profile.getPlayer().getUniqueId(), kit) - loserElo) + " Elo)");
                     profile.sendMessage(" ");
                     profile.sendMessage(" &aWinner: " + Practice.SECONDARY_COLOR
-                            + winner.getPlayer().getName() + " &7| &cLoser: "
+                            + winner.getPlayer().getName() + " &7| &cLoser: " + Practice.SECONDARY_COLOR
                             + profile.getPlayer().getName());
                     profile.sendMessage(" ");
 
                 } else {
                     profile.sendMessage(" ");
                     profile.sendMessage(Practice.PRIMARY_COLOR
-                            + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
-                            + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + ".");
+                            + profile.getPlayer().getName() + Practice.QUATERNARY_COLOR + " was killed by "
+                            + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.QUATERNARY_COLOR + ".");
                     profile.sendMessage("&cYour opponent has not played more than 5 matches resulting in you not losing any elo.");
                     profile.sendMessage(" ");
                     profile.sendMessage(Practice.PRIMARY_COLOR + "&lMatch Results &7(Click to view)");
                     profile.sendMessage(" &aWinner: " + Practice.SECONDARY_COLOR
-                            + winner.getPlayer().getName() + " &7| &cLoser: "
+                            + winner.getPlayer().getName() + " &7| &cLoser: " + Practice.SECONDARY_COLOR
                             + profile.getPlayer().getName());
                     profile.sendMessage(" ");
                 }
 
                 winner.sendMessage(" ");
                 winner.sendMessage(Practice.PRIMARY_COLOR
-                        + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
-                        + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + "."
+                        + profile.getPlayer().getName() + Practice.QUATERNARY_COLOR + " was killed by "
+                        + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.QUATERNARY_COLOR + "."
                         + " &a(+" + (Practice.get().getLeaderboardManager().getElo(winner.getPlayer().getUniqueId(), kit) - winnerElo) + " Elo)");
                 winner.sendMessage(" ");
             } else {
 
                 profile.sendMessage(" ");
                 profile.sendMessage(Practice.PRIMARY_COLOR
-                        + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
-                        + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + ".");
+                        + profile.getPlayer().getName() + Practice.QUATERNARY_COLOR + " was killed by "
+                        + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.QUATERNARY_COLOR + ".");
                 profile.sendMessage(" ");
 
                 winner.sendMessage(" ");
                 winner.sendMessage(Practice.PRIMARY_COLOR
-                        + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was killed by "
-                        + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.SECONDARY_COLOR + ".");
+                        + profile.getPlayer().getName() + Practice.QUATERNARY_COLOR + " was killed by "
+                        + Practice.PRIMARY_COLOR + winner.getPlayer().getName() + Practice.QUATERNARY_COLOR + ".");
                 winner.sendMessage(" ");
             }
 
             winner.sendMessage(Practice.PRIMARY_COLOR + "&lMatch Results &7(Click to view)");
             winner.sendMessage(" &aWinner: " + Practice.SECONDARY_COLOR
-                    + winner.getPlayer().getName() + " &7| &cLoser: "
+                    + winner.getPlayer().getName() + " &7| &cLoser: " + Practice.SECONDARY_COLOR
                     + profile.getPlayer().getName());
             winner.sendMessage(" ");
 
@@ -438,6 +433,7 @@ public class Match {
                                 profile.sendTitle(
                                         Practice.PRIMARY_COLOR + "&l" + (duration + 1),
                                         0, 10, 5);
+                                profile.getPlayer().playSound(profile.getPlayer().getLocation(), Sound.CLICK, 1, 1);
                             });
                         }
 
@@ -450,6 +446,7 @@ public class Match {
                                 profile.sendTitle(
                                         "&c",
                                         0, 10, 5);
+                                profile.getPlayer().playSound(profile.getPlayer().getLocation(), Sound.FIREWORK_BLAST, 1, 1);
                             });
 
                             matchTask.cancel();
@@ -533,6 +530,7 @@ public class Match {
                                 profile.sendTitle(
                                         "&c&l" + (duration + 1),
                                         0, 10, 5);
+                                profile.getPlayer().playSound(profile.getPlayer().getLocation(), Sound.CLICK, 1, 1);
                             });
 
                             teamTwoAlive.forEach(profile -> {
@@ -579,8 +577,9 @@ public class Match {
                                         + Practice.PRIMARY_COLOR + (duration + 1)
                                         + Practice.QUATERNARY_COLOR + " seconds...");
                                 profile.sendTitle(
-                                        "&c&l" + (duration + 1),
+                                        "&c" + (duration + 1),
                                         0, 10, 5);
+                                profile.getPlayer().playSound(profile.getPlayer().getLocation(), Sound.CLICK, 1, 1);
                             });
                         }
 
@@ -593,6 +592,7 @@ public class Match {
                                 profile.sendTitle(
                                         "&c",
                                         0, 10, 5);
+                                profile.getPlayer().playSound(profile.getPlayer().getLocation(), Sound.FIREWORK_BLAST, 1, 1);
                             });
 
                             teamTwoAlive.forEach(profile -> {
@@ -600,6 +600,7 @@ public class Match {
                                 profile.sendTitle(
                                         "&c",
                                         0, 10, 5);
+                                profile.getPlayer().playSound(profile.getPlayer().getLocation(), Sound.FIREWORK_BLAST, 1, 1);
                             });
 
                             preparing = false;

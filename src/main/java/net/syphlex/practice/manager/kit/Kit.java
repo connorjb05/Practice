@@ -60,18 +60,37 @@ public abstract class Kit {
             throw  new NullPointerException("Kit armor is not initialized!");
         }
 
+        ItemStack[] inventory = this.inventory.clone();
+        ItemStack[] armor = this.armor.clone();
+
+        if (profile.getKitPresets().get(this) != null) {
+            inventory = profile.getKitPreset(this).clone();
+        }
+
         if (profile.getMatch().getKit() instanceof BridgeKit) {
+
+            int claySlot1 = -1, claySlot2 = -1;
+
+            for (int i = 0; i < inventory.length; i++) {
+                if (inventory[i] != null && inventory[i].getType() == Material.STAINED_CLAY) {
+                    if (claySlot1 == -1) {
+                        claySlot1 = i;
+                    } else {
+                        claySlot2 = i;
+                    }
+                }
+            }
 
             // red team (team 1)
             if (profile.getMatch().isTeamOne(profile)) {
 
-                inventory[1] = new ItemBuilder()
+                inventory[claySlot1] = new ItemBuilder()
                         .setMaterial(Material.STAINED_CLAY)
                         .setDurability((short)14)
                         .setAmount(64)
                         .build();
 
-                inventory[3] = new ItemBuilder()
+                inventory[claySlot2] = new ItemBuilder()
                         .setMaterial(Material.STAINED_CLAY)
                         .setDurability((short)14)
                         .setAmount(64)
@@ -98,13 +117,13 @@ public abstract class Kit {
             } else {
                 // blue team (team 2)
 
-                inventory[1] = new ItemBuilder()
+                inventory[claySlot1] = new ItemBuilder()
                         .setMaterial(Material.STAINED_CLAY)
                         .setDurability((short)11)
                         .setAmount(64)
                         .build();
 
-                inventory[3] = new ItemBuilder()
+                inventory[claySlot2] = new ItemBuilder()
                         .setMaterial(Material.STAINED_CLAY)
                         .setDurability((short)11)
                         .setAmount(64)
@@ -130,11 +149,7 @@ public abstract class Kit {
             }
         }
 
-        if (profile.getKitPresets().get(this) != null) {
-            profile.getPlayer().getInventory().setContents(profile.getKitPreset(this));
-        } else {
-            profile.getPlayer().getInventory().setContents(inventory);
-        }
+        profile.getPlayer().getInventory().setContents(inventory);
         profile.getPlayer().getInventory().setArmorContents(armor);
 
         if (!potionEffects.isEmpty()) {

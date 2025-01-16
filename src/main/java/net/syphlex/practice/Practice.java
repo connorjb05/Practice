@@ -2,9 +2,7 @@ package net.syphlex.practice;
 
 import lombok.Getter;
 import net.syphlex.practice.command.*;
-import net.syphlex.practice.listener.BotListener;
-import net.syphlex.practice.listener.PlayerListener;
-import net.syphlex.practice.listener.WorldListener;
+import net.syphlex.practice.listener.*;
 import net.syphlex.practice.manager.arena.ArenaManager;
 import net.syphlex.practice.manager.arena.ChunkManager;
 import net.syphlex.practice.manager.config.ConfigManager;
@@ -69,7 +67,6 @@ public class Practice extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         Bukkit.getPluginManager().registerEvents(new WorldListener(), this);
-        Bukkit.getPluginManager().registerEvents(new BotListener(), this);
 
         new SetMainSpawnCmd("setspawn");
         new ArenaCmd("arena");

@@ -20,11 +20,18 @@ public class ItemUtil {
     public List<String> serializeItemStack(ItemStack[] itemStacks){
         List<String> itemList = new ArrayList<>();
 
+        int i = 0;
         for (ItemStack itemStack : itemStacks) {
+
+            if (itemStack == null) {
+                i++;
+                continue;
+            }
 
             StringBuilder serializedItem = new StringBuilder();
 
             Material material = itemStack.getType();
+            int slot = i;
             int amount = itemStack.getAmount();
             short durability = itemStack.getDurability();
             boolean unbreakable = false;
@@ -34,6 +41,7 @@ public class ItemUtil {
             }
 
             serializedItem.append(material.name())
+                    .append(";").append(slot)
                     .append(";").append(amount)
                     .append(";").append(durability)
                     .append(";").append(unbreakable)
@@ -44,7 +52,7 @@ public class ItemUtil {
             if (itemStack.getItemMeta() != null && itemStack.getItemMeta().hasEnchants()) {
                 StringBuilder enchants = new StringBuilder();
                 for (Map.Entry<Enchantment, Integer> entry : itemStack.getItemMeta().getEnchants().entrySet()) {
-                    enchants.append(entry.getKey())  // Use the NamespacedKey to avoid issues with different enchantment names
+                    enchants.append(entry.getKey().getName())  // Use the NamespacedKey to avoid issues with different enchantment names
                             .append(":").append(entry.getValue()).append(",");
                 }
                 // Remove the last comma
@@ -55,6 +63,7 @@ public class ItemUtil {
             }
 
             itemList.add(serializedItem.toString());
+            i++;
         }
 
         return itemList;
@@ -62,23 +71,24 @@ public class ItemUtil {
 
     public ItemStack[] deserializeItemStack(List<String> strings){
 
-        ItemStack[] itemStacks = new ItemStack[strings.size()];
+        ItemStack[] itemStacks = new ItemStack[36];
 
         for (int i = 0; i < strings.size(); i++) {
 
             String[] split = strings.get(i).split(";");
 
             String nameAsString = split[0];
-            String amountAsString = split[1];
-            String durabilityAsString = split[2];
-            String unbreakableAsString = split[3];
+            String slotAsString = split[1];
+            String amountAsString = split[2];
+            String durabilityAsString = split[3];
+            String unbreakableAsString = split[4];
 
             Map< Enchantment, Integer> enchantmentMap = new HashMap<>();
             // split enchantments format ('PROTECTION_ENVIRONMENTAL:1,DAMAGE_ALL:1')
-            if (split.length > 4) {
+            if (split.length > 5) {
 
                 // as a string value it is displayed: 'DAMAGE_ALL:1' per enchant here:
-                String[] enchantmentsSplit = split[4].split(",");
+                String[] enchantmentsSplit = split[5].split(",");
 
                 // use for loop to dissect each enchantment
                 for (String s : enchantmentsSplit) {
@@ -137,9 +147,17 @@ public class ItemUtil {
                 }
             }
 
-            itemStacks[i] = itemStack;
+            itemStacks[Integer.parseInt(slotAsString)] = itemStack;
         }
         return itemStacks;
+    }
+
+    public ItemStack getLeaveEventItem(){
+        return new ItemBuilder()
+                .setMaterial(Material.INK_SACK)
+                .setDurability((short)1)
+                .setName("&cLeave Event &7(Right Click)")
+                .build();
     }
 
     public ItemStack getPlayAgainItem(){

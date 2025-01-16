@@ -12,7 +12,9 @@ import net.syphlex.practice.util.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class DuelCmd extends AbstractCmd {
     public DuelCmd(String command) {
@@ -42,6 +44,15 @@ public class DuelCmd extends AbstractCmd {
                 return;
             }
 
+            if (target.isInParty()) {
+
+                if (!target.getParty().isLeader(target)) {
+                    profile.sendMessage("&cYou can only send a duel request to the leader of the party.");
+                    return;
+                }
+
+            }
+
             profile.openMenu(new DuelMenu(target));
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("accept")) {
@@ -65,14 +76,35 @@ public class DuelCmd extends AbstractCmd {
                 return;
             }
 
+            if (profile.isInParty()) {
+                if (!profile.getParty().isLeader(profile)) {
+                    profile.sendMessage("&cYou must be the leader of this party to accept duel requests.");
+                    return;
+                }
+            }
+
             final Kit kit = profile.getDuelRequests().getRequestKit(requester);
 
             final Arena arena = Practice.get().getArenaManager().getFreeArena(kit);
 
+            List<Profile> teamOne = new ArrayList<>();
+            List<Profile> teamTwo = new ArrayList<>();
+
+            teamOne.add(requester);
+            teamTwo.add(profile);
+
+            if (requester.isInParty()) {
+                teamOne.addAll(requester.getParty().getMembers());
+            }
+
+            if (profile.isInParty()) {
+                teamTwo.addAll(profile.getParty().getMembers());
+            }
+
             Practice.get().getMatchManager().getMatchMap()
                     .get(kit).add(new Match(
-                            Collections.singletonList(profile),
-                            Collections.singletonList(requester),
+                            teamOne,
+                            teamTwo,
                             null, arena, kit, false, false));
 
             profile.sendMessage("&aYou accepted " + requester.getPlayer().getName() + "'s duel request...");

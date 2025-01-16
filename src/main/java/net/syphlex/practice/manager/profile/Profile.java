@@ -123,7 +123,6 @@ public class Profile {
     }
 
     public void setKnockback(String profile){
-
         KnockbackProfile knockbackProfile = KnockbackModule.INSTANCE.profiles
                 .getOrDefault(profile, KnockbackModule.getDefault());
         entityPlayer.setKnockback(knockbackProfile);

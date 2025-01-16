@@ -11,25 +11,28 @@ import org.bukkit.event.entity.EntityDamageEvent;
 @Setter
 public class ProfileDamageEvent extends Event {
 
-    public static HandlerList handlers = new HandlerList();
+    private static final HandlerList handlers = new HandlerList();
 
-    private final Profile victim;
     private final Profile attacker;
-    private final EntityDamageEvent.DamageCause damageCause;
+    private final Profile victim;
+    private final EntityDamageEvent.DamageCause cause;
+    private double damage, finalDamage;
+    private boolean cancelled = false;
 
-    private boolean pvp, cancelled = false;
-
-    public ProfileDamageEvent(Profile victim, Profile attacker, EntityDamageEvent.DamageCause damageCause){
-
-        this.victim = victim;
+    public ProfileDamageEvent(Profile attacker, Profile victim, EntityDamageEvent.DamageCause cause, double damage, double finalDamage){
         this.attacker = attacker;
-        this.damageCause = damageCause;
-
-        this.pvp = attacker != null;
+        this.victim = victim;
+        this.cause = cause;
+        this.damage = damage;
+        this.finalDamage = finalDamage;
     }
 
     @Override
     public HandlerList getHandlers() {
+        return handlers;
+    }
+
+    public static HandlerList getHandlerList() {
         return handlers;
     }
 }

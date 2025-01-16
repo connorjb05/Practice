@@ -9,6 +9,8 @@ import net.syphlex.practice.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Arrays;
+
 /**
  * Edit layout inventory here
  */
@@ -31,18 +33,30 @@ public class KitEditorMenu extends Menu {
                 .setMaterial(Material.WOOL)
                 .setDurability((short) 13)
                 .setName("&a&lSave")
+                .setLore(Arrays.asList(
+                        "&7Save your personal changes.",
+                        "&7",
+                        "&aClick to save."))
                 .build());
 
         inventory.setItem(13, new ItemBuilder()
                 .setMaterial(Material.WOOL)
                 .setDurability((short) 4)
                 .setName("&e&lReset")
+                .setLore(Arrays.asList(
+                        "&7Reset any changes made.",
+                        "&7",
+                        "&eClick to reset."))
                 .build());
 
         inventory.setItem(15, new ItemBuilder()
                 .setMaterial(Material.WOOL)
                 .setDurability((short) 14)
                 .setName("&c&lCancel")
+                .setLore(Arrays.asList(
+                        "&7Close menu without saving.",
+                        "&7",
+                        "&cClick to cancel."))
                 .build());
     }
 
