@@ -1,12 +1,10 @@
-package net.syphlex.practice.manager.kit;
+package net.syphlex.practice.manager.ladder;
 
 import lombok.Getter;
-import net.syphlex.practice.manager.kit.impl.BridgeKit;
-import net.syphlex.practice.manager.kit.impl.SumoKit;
+import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
+import net.syphlex.practice.manager.ladder.impl.SumoLadder;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.ItemBuilder;
-import net.syphlex.practice.util.ItemUtil;
-import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.ItemUtil;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -16,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public abstract class Kit {
+public abstract class Ladder {
 
     private final String name;
 
@@ -25,9 +23,11 @@ public abstract class Kit {
     public ItemStack[] inventory;
     public ItemStack[] armor;
 
+    public boolean freeze = false;
+
     public List<PotionEffect> potionEffects = new ArrayList<>();
 
-    public Kit(String name){
+    public Ladder(String name){
         this.name = name;
     }
 
@@ -38,7 +38,7 @@ public abstract class Kit {
         }
 
         if (profile.getMatch() != null
-                && profile.getMatch().getKit() instanceof SumoKit) {
+                && profile.getMatch().getLadder() instanceof SumoLadder) {
             giveKit(profile);
             return;
         }
@@ -67,7 +67,7 @@ public abstract class Kit {
             inventory = profile.getKitPreset(this).clone();
         }
 
-        if (profile.getMatch().getKit() instanceof BridgeKit) {
+        if (profile.getMatch().getLadder() instanceof BridgeLadder) {
 
             int claySlot1 = -1, claySlot2 = -1;
 

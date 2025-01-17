@@ -16,3 +16,5 @@ commands:
   build:
   duel:
     aliases: [d]
+  event:
+    aliases: [e, tournament, tournaments, events]

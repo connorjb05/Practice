@@ -6,7 +6,8 @@ import net.syphlex.practice.listener.*;
 import net.syphlex.practice.manager.arena.ArenaManager;
 import net.syphlex.practice.manager.arena.ChunkManager;
 import net.syphlex.practice.manager.config.ConfigManager;
-import net.syphlex.practice.manager.kit.KitManager;
+import net.syphlex.practice.manager.event.EventManager;
+import net.syphlex.practice.manager.ladder.LadderManager;
 import net.syphlex.practice.manager.leaderboards.LeaderboardManager;
 import net.syphlex.practice.manager.match.MatchManager;
 import net.syphlex.practice.manager.menu.MenuManager;
@@ -35,12 +36,13 @@ public class Practice extends JavaPlugin {
     private final ThreadManager threadManager = new ThreadManager();
     private final ConfigManager configManager = new ConfigManager();
     private final ScoreboardManager scoreboardManager = new ScoreboardManager();
-    private final KitManager kitManager = new KitManager();
+    private final LadderManager ladderManager = new LadderManager();
     private final ProfileManager profileManager = new ProfileManager();
     private final ArenaManager arenaManager = new ArenaManager();
     private final ChunkManager chunkManager = new ChunkManager();
     private final MatchManager matchManager = new MatchManager();
     private final QueueManager queueManager = new QueueManager();
+    private final EventManager eventManager = new EventManager();
     private final MenuManager menuManager = new MenuManager();
     private final PartyManager partyManager = new PartyManager();
     private final LeaderboardManager leaderboardManager = new LeaderboardManager();
@@ -56,16 +58,18 @@ public class Practice extends JavaPlugin {
 
         configManager.onEnable();
         scoreboardManager.onEnable();
-        kitManager.onEnable();
+        ladderManager.onEnable();
         profileManager.onEnable();
         arenaManager.onEnable();
         chunkManager.onEnable();
         matchManager.onEnable();
         queueManager.onEnable();
+        eventManager.onEnable();
         leaderboardManager.onEnable();
         menuManager.onEnable();
 
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+        Bukkit.getPluginManager().registerEvents(new MatchListener(), this);
         Bukkit.getPluginManager().registerEvents(new WorldListener(), this);
 
         new SetMainSpawnCmd("setspawn");
@@ -75,6 +79,7 @@ public class Practice extends JavaPlugin {
         new SpawnCmd("spawn");
         new BuildCmd("build");
         new DuelCmd("duel");
+        new EventCmd("event");
     }
 
     @Override
@@ -86,6 +91,7 @@ public class Practice extends JavaPlugin {
 
         matchManager.onDisable();
         leaderboardManager.onDisable();
+        eventManager.onDisable();
         queueManager.onDisable();
         chunkManager.onDisable();
         arenaManager.onDisable();

@@ -1,5 +1,6 @@
 package net.syphlex.practice.manager.event;
 
+import lombok.Getter;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.event.impl.SumoEvent;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class EventManager {
 
     private final List<PracticeEvent> events = new ArrayList<>();
@@ -32,9 +34,7 @@ public class EventManager {
 
             config.options().copyDefaults(true);
 
-            events.add(new SumoEvent("sumo1v1", "Sumo 1v1", config));
-            events.add(new SumoEvent("sumo2v2", "Sumo 2v2", config));
-            events.add(new SumoEvent("sumo3v3", "Sumo 3v3", config));
+            events.add(new SumoEvent(EventInfo.SUMO1V1, config));
 
             config.save(file);
 
@@ -72,13 +72,14 @@ public class EventManager {
 
     }
 
-    public void hostEvent(){
+    public void hostEvent(PracticeEvent e){
 
         if (activeEvent != null) {
             return;
         }
 
-
+        activeEvent = e;
+        startTask();
     }
 
     public void endEvent(){
@@ -89,6 +90,8 @@ public class EventManager {
 
         activeEvent.endEvent();
         eventTask.cancel();
+
+        activeEvent = null;
     }
 
     public void startTask(){

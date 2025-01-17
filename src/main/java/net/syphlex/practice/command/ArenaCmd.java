@@ -2,7 +2,7 @@ package net.syphlex.practice.command;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.arena.Arena;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.AbstractCmd;
 import net.syphlex.practice.util.Messages;
@@ -131,15 +131,15 @@ public class ArenaCmd extends AbstractCmd {
                     return;
                 }
 
-                if (Practice.get().getArenaManager().getArenaMap().get(arenaName).getKits().isEmpty()) {
+                if (Practice.get().getArenaManager().getArenaMap().get(arenaName).getLadders().isEmpty()) {
                     profile.sendMessage(Practice.PRIMARY_COLOR + "&lKits: &cNone");
                     return;
                 }
 
                 profile.sendMessage(Practice.PRIMARY_COLOR + "&lKits:");
-                for (Kit kit : Practice.get().getArenaManager().getArenaMap().get(arenaName).getKits()) {
+                for (Ladder ladder : Practice.get().getArenaManager().getArenaMap().get(arenaName).getLadders()) {
                     profile.sendMessage(Practice.PRIMARY_COLOR + " » "
-                            + Practice.SECONDARY_COLOR + ChatColor.stripColor(kit.getName()));
+                            + Practice.SECONDARY_COLOR + ChatColor.stripColor(ladder.getName()));
                 }
             }
         } else if (args.length == 1 && args[0].equalsIgnoreCase("list")) {
@@ -155,7 +155,7 @@ public class ArenaCmd extends AbstractCmd {
                         + ": " + (Practice.get().getArenaManager().getArenaMap().get(arenaName).isOpen() ? "&aOpen" : "&cIn Use"));
             }
 
-        } else if (args.length == 3 && args[0].equalsIgnoreCase("addkit")) {
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("addladder")) {
 
             String arenaName = args[2];
             String kitName = args[1];
@@ -165,25 +165,25 @@ public class ArenaCmd extends AbstractCmd {
                 return;
             }
 
-            if (!Practice.get().getKitManager().kitExists(kitName)) {
+            if (!Practice.get().getLadderManager().kitExists(kitName)) {
                 profile.sendMessage("&cCould not find a kit with that name.");
                 return;
             }
 
             final Arena arena = Practice.get().getArenaManager().getArenaMap().get(arenaName);
-            final Kit kit = Practice.get().getKitManager().getKitMap().get(kitName);
+            final Ladder ladder = Practice.get().getLadderManager().getLadderMap().get(kitName);
 
-            if (arena.getKits().contains(kit)) {
+            if (arena.getLadders().contains(ladder)) {
                 profile.sendMessage("&cThis arena already has this kit added.");
                 return;
             }
 
             profile.sendMessage("&aYou have successfully added the "
                     + kitName + " kit to " + arenaName + ".");
-            arena.getKits().add(kit);
+            arena.getLadders().add(ladder);
 
 
-        } else if (args.length == 3 && args[0].equalsIgnoreCase("delkit")) {
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("delladder")) {
 
             String arenaName = args[2];
             String kitName = args[1];
@@ -193,22 +193,22 @@ public class ArenaCmd extends AbstractCmd {
                 return;
             }
 
-            if (!Practice.get().getKitManager().kitExists(kitName)) {
+            if (!Practice.get().getLadderManager().kitExists(kitName)) {
                 profile.sendMessage("&cCould not find a kit with that name.");
                 return;
             }
 
             final Arena arena = Practice.get().getArenaManager().getArenaMap().get(arenaName);
-            final Kit kit = Practice.get().getKitManager().getKitMap().get(kitName);
+            final Ladder ladder = Practice.get().getLadderManager().getLadderMap().get(kitName);
 
-            if (!arena.getKits().contains(kit)) {
+            if (!arena.getLadders().contains(ladder)) {
                 profile.sendMessage("&cThis arena does not have this kit added.");
                 return;
             }
 
             profile.sendMessage("&cYou have successfully removed the " + kitName
                     + " kit from " + arenaName + ".");
-            arena.getKits().remove(kit);
+            arena.getLadders().remove(ladder);
 
         } else {
             profile.sendMessage(" ");
@@ -220,8 +220,8 @@ public class ArenaCmd extends AbstractCmd {
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena corner1" + Practice.SECONDARY_COLOR + " <arena>");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena corner2" + Practice.SECONDARY_COLOR + " <arena>");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena spectate" + Practice.SECONDARY_COLOR + " <arena>");
-            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena addkit" + Practice.SECONDARY_COLOR + " <kit> <arena>");
-            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena delkit" + Practice.SECONDARY_COLOR + " <kit> <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena addladder" + Practice.SECONDARY_COLOR + " <kit> <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena delladder" + Practice.SECONDARY_COLOR + " <kit> <arena>");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena kits" + Practice.SECONDARY_COLOR + " <arena>");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena list");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena teleport" + Practice.SECONDARY_COLOR + " <arena>");

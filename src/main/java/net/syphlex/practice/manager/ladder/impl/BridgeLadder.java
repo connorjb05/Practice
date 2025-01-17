@@ -1,19 +1,19 @@
-package net.syphlex.practice.manager.kit.impl;
+package net.syphlex.practice.manager.ladder.impl;
 
 import net.syphlex.practice.Practice;
-import net.syphlex.practice.manager.kit.Kit;
-import net.syphlex.practice.util.ItemBuilder;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
-public class BridgeKit extends Kit {
+public class BridgeLadder extends Ladder {
 
 
-    public BridgeKit(String name) {
+    public BridgeLadder(String name) {
         super(name);
+
+        freeze = true;
 
         menuIcon = new ItemBuilder()
                 .setMaterial(Material.STAINED_CLAY)

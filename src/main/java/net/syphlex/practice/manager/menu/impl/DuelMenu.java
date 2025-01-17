@@ -3,20 +3,14 @@ package net.syphlex.practice.manager.menu.impl;
 import net.syphlex.core.Core;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.PlayerUtil;
-import net.syphlex.practice.util.StringUtil;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Queue;
 
 public class DuelMenu extends Menu {
 
@@ -32,11 +26,11 @@ public class DuelMenu extends Menu {
         }
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
-            if (kit.menuIcon != null) {
+            if (ladder.menuIcon != null) {
 
-                ItemStack itemStack = kit.menuIcon;
+                ItemStack itemStack = ladder.menuIcon;
                 ItemMeta itemMeta = itemStack.getItemMeta();
                 itemMeta.setLore(null);
                 itemMeta.addItemFlags(ItemFlag.values());
@@ -60,11 +54,11 @@ public class DuelMenu extends Menu {
         final Profile profile = e.getProfile();
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
             if (e.getSlot() == slot) {
 
-                target.getDuelRequests().addRequest(profile, kit);
+                target.getDuelRequests().addRequest(profile, ladder);
 
                 profile.getPlayer().closeInventory();
 
@@ -76,7 +70,7 @@ public class DuelMenu extends Menu {
                         + target.getPlayer().getName() + (target.isInParty() ? "'s"
                         + Practice.QUATERNARY_COLOR + " Party" : ""));
                 profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
-                        + Practice.PRIMARY_COLOR + kit.getName());
+                        + Practice.PRIMARY_COLOR + ladder.getName());
                 profile.sendMessage(" ");
 
                 if (target.isInParty()) {
@@ -104,7 +98,7 @@ public class DuelMenu extends Menu {
                     PlayerUtil.sendClickableText(
                             target.getPlayer(),
                             Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
-                                    + Practice.PRIMARY_COLOR + kit.getName(),
+                                    + Practice.PRIMARY_COLOR + ladder.getName(),
                             "duel accept " + profile.getPlayer().getName());
                     target.sendMessage(" ");
 
@@ -120,7 +114,7 @@ public class DuelMenu extends Menu {
                                 + Practice.PRIMARY_COLOR
                                 + (profile.isInParty() ? profile.getParty().getPartySize() : 1));
                         members.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
-                                + Practice.PRIMARY_COLOR + kit.getName());
+                                + Practice.PRIMARY_COLOR + ladder.getName());
                         members.sendMessage(" ");
                     }
 
@@ -136,7 +130,7 @@ public class DuelMenu extends Menu {
                                     + target.getPlayer().getName() + (target.isInParty() ? "'s"
                                     + Practice.QUATERNARY_COLOR +  " Party" : ""));
                             members.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
-                                    + Practice.PRIMARY_COLOR + kit.getName());
+                                    + Practice.PRIMARY_COLOR + ladder.getName());
                             members.sendMessage(" ");
                         }
                     }
@@ -157,7 +151,7 @@ public class DuelMenu extends Menu {
                     PlayerUtil.sendClickableText(
                             target.getPlayer(),
                             Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
-                                    + Practice.PRIMARY_COLOR + kit.getName(),
+                                    + Practice.PRIMARY_COLOR + ladder.getName(),
                             "duel accept " + profile.getPlayer().getName());
                     target.sendMessage(" ");
                 }

@@ -2,7 +2,7 @@ package net.syphlex.practice.util;
 
 import lombok.experimental.UtilityClass;
 import net.syphlex.practice.Practice;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -185,7 +185,7 @@ public class ItemUtil {
 
     public ItemStack getEventHostItem(){
         return new ItemBuilder()
-                .setName(Practice.PRIMARY_COLOR + "Event Host &7(Right Click)")
+                .setName(Practice.PRIMARY_COLOR + "Host Event &7(Right Click)")
                 .setMaterial(Material.EYE_OF_ENDER)
                 .build();
     }
@@ -261,10 +261,10 @@ public class ItemUtil {
                 .build();
     }
 
-    public ItemStack getBookKit(Kit kit){
+    public ItemStack getBookKit(Ladder ladder){
         return new ItemBuilder()
                 .setMaterial(Material.ENCHANTED_BOOK)
-                .setName(Practice.PRIMARY_COLOR + kit.getName() + " Kit")
+                .setName(Practice.PRIMARY_COLOR + ladder.getName() + " Kit")
                 .build();
     }
 }

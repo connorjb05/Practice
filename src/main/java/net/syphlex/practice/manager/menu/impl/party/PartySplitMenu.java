@@ -3,7 +3,7 @@ package net.syphlex.practice.manager.menu.impl.party;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.arena.Arena;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.party.Party;
@@ -27,11 +27,11 @@ public class PartySplitMenu extends Menu {
         }
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
-            if (kit.menuIcon != null) {
+            if (ladder.menuIcon != null) {
 
-                ItemStack itemStack = kit.menuIcon;
+                ItemStack itemStack = ladder.menuIcon;
                 ItemMeta itemMeta = itemStack.getItemMeta();
 
                 itemMeta.addItemFlags(ItemFlag.values());
@@ -63,11 +63,11 @@ public class PartySplitMenu extends Menu {
         final Party party = profile.getParty();
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
             if (e.getSlot() == slot) {
 
-                Arena arena = Practice.get().getArenaManager().getFreeArena(kit);
+                Arena arena = Practice.get().getArenaManager().getFreeArena(ladder);
 
                 // no arena was found!
                 if (arena == null) {
@@ -76,8 +76,8 @@ public class PartySplitMenu extends Menu {
                 }
 
                 Practice.get().getMatchManager().getMatchMap()
-                        .get(kit).add(new Match(null, null,
-                                party, arena, kit, false, false));
+                        .get(ladder).add(new Match(null, null,
+                                party, arena, ladder, false, false));
 
                 profile.getPlayer().closeInventory();
             }

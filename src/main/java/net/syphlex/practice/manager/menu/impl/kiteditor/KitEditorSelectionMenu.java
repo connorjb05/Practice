@@ -2,7 +2,7 @@ package net.syphlex.practice.manager.menu.impl.kiteditor;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.StringUtil;
@@ -28,11 +28,11 @@ public class KitEditorSelectionMenu extends Menu {
         }
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
-            if (kit.menuIcon != null) {
+            if (ladder.menuIcon != null) {
 
-                ItemStack itemStack = kit.menuIcon;
+                ItemStack itemStack = ladder.menuIcon;
                 ItemMeta itemMeta = itemStack.getItemMeta();
 
                 itemMeta.addItemFlags(ItemFlag.values());
@@ -64,17 +64,17 @@ public class KitEditorSelectionMenu extends Menu {
         final Profile profile = e.getProfile();
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
             if (e.getSlot() == slot) {
                 profile.getPlayer().closeInventory();
-                profile.openMenu(new KitEditorMenu(kit));
+                profile.openMenu(new KitEditorMenu(ladder));
 
                 profile.getPlayer().getInventory().clear();
-                if (profile.getKitPresets().get(kit) != null) {
-                    profile.getPlayer().getInventory().setContents(profile.getKitPreset(kit));
+                if (profile.getKitPresets().get(ladder) != null) {
+                    profile.getPlayer().getInventory().setContents(profile.getKitPreset(ladder));
                 } else {
-                    profile.getPlayer().getInventory().setContents(kit.getInventory());
+                    profile.getPlayer().getInventory().setContents(ladder.getInventory());
                 }
                 return;
             }

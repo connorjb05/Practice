@@ -3,7 +3,7 @@ package net.syphlex.practice.manager.arena;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import org.bukkit.Location;
 import org.bukkit.World;
 
@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class Arena {
     private final String name;
-    private final List<Kit> kits = new ArrayList<>();
+    private final List<Ladder> ladders = new ArrayList<>();
     private Location position1, position2,
             corner1, corner2, spectate;
 

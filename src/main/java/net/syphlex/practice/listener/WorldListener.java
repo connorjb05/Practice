@@ -1,8 +1,7 @@
 package net.syphlex.practice.listener;
 
 import net.syphlex.practice.Practice;
-import net.syphlex.practice.manager.kit.impl.BowKit;
-import net.syphlex.practice.manager.kit.impl.BridgeKit;
+import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
 import net.syphlex.practice.manager.profile.Profile;
 import org.bukkit.Difficulty;
 import org.bukkit.entity.Player;
@@ -37,7 +36,7 @@ public class WorldListener implements Listener {
             final Profile profile = Practice.get().getProfileManager().get(player);
 
             if (profile.isInMatch()) {
-                if (profile.getMatch().getKit() instanceof BridgeKit) {
+                if (profile.getMatch().getLadder() instanceof BridgeLadder) {
                     e.setCancelled(true);
                 }
             }

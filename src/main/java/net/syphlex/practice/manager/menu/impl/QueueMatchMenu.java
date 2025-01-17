@@ -2,12 +2,7 @@ package net.syphlex.practice.manager.menu.impl;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.manager.kit.Kit;
-import net.syphlex.practice.manager.menu.Menu;
-import net.syphlex.practice.manager.profile.Profile;
-import net.syphlex.practice.util.StringUtil;
-import net.syphlex.practice.Practice;
-import net.syphlex.practice.event.MenuClickEvent;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.StringUtil;
@@ -37,17 +32,17 @@ public class QueueMatchMenu extends Menu {
             @Override
             public void run(){
                 int slot = 10;
-                for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+                for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
-                    if (kit.menuIcon != null) {
+                    if (ladder.menuIcon != null) {
 
-                        ItemStack itemStack = kit.menuIcon;
+                        ItemStack itemStack = ladder.menuIcon;
                         ItemMeta itemMeta = itemStack.getItemMeta();
 
                         itemMeta.addItemFlags(ItemFlag.values());
 
-                        int inMatch = Practice.get().getMatchManager().getInMatch(kit);
-                        int inQueue = Practice.get().getQueueManager().getInQueue(kit);
+                        int inMatch = Practice.get().getMatchManager().getInMatch(ladder);
+                        int inQueue = Practice.get().getQueueManager().getInQueue(ladder);
 
                         List<String> lore = new ArrayList<>(Arrays.asList(
                                 "&f&m-------------------",
@@ -86,10 +81,10 @@ public class QueueMatchMenu extends Menu {
         final Profile profile = e.getProfile();
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
             if (e.getSlot() == slot) {
-                Practice.get().getQueueManager().queue(profile, kit);
+                Practice.get().getQueueManager().queue(profile, ladder);
                 profile.getPlayer().closeInventory();
             }
 

@@ -1,15 +1,14 @@
-package net.syphlex.practice.manager.kit.impl;
+package net.syphlex.practice.manager.ladder.impl;
 
 import net.syphlex.practice.Practice;
-import net.syphlex.practice.manager.kit.Kit;
-import net.syphlex.practice.util.ItemBuilder;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
-public class NoDebuffKit extends Kit {
-    public NoDebuffKit(String name) {
+public class NoDebuffLadder extends Ladder {
+    public NoDebuffLadder(String name) {
         super(name);
 
         menuIcon = new ItemBuilder()

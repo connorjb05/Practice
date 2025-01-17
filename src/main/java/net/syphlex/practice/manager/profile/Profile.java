@@ -8,7 +8,7 @@ import lombok.Setter;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.inventory.ItemStack;
 import net.syphlex.practice.Practice;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.party.Party;
@@ -33,7 +33,7 @@ public class Profile {
     private final Object fileLock = new Object();
 
     private final Map<Party, Long> partyInvitations = new HashMap<>();
-    private final Map<Kit, ItemStack[]> kitPresets = new HashMap<>();
+    private final Map<Ladder, ItemStack[]> kitPresets = new HashMap<>();
 
     private final DuelRequests duelRequests = new DuelRequests();
 
@@ -45,7 +45,7 @@ public class Profile {
 
     private Menu menu = null;
 
-    private Kit kitQueued = null, lastMatchKit = null;
+    private Ladder ladderQueued = null, lastMatchLadder = null;
 
     private Match match = null;
 
@@ -69,12 +69,12 @@ public class Profile {
         scoreboard.updateTitle(StringUtil.CC(Practice.PRIMARY_COLOR + "&lSyphlex &7❘ &fPractice"));
     }
 
-    public void saveKitPreset(Kit kit, ItemStack[] inventory){
-        kitPresets.putIfAbsent(kit, inventory);
+    public void saveKitPreset(Ladder ladder, ItemStack[] inventory){
+        kitPresets.putIfAbsent(ladder, inventory);
     }
 
-    public ItemStack[] getKitPreset(Kit kit){
-        return kitPresets.getOrDefault(kit, null);
+    public ItemStack[] getKitPreset(Ladder ladder){
+        return kitPresets.getOrDefault(ladder, null);
     }
 
     public void startEnderpearlCooldown(){
@@ -140,28 +140,28 @@ public class Profile {
         player.setFlying(true);
         player.setGameMode(GameMode.CREATIVE);
 
-        match.addSpectator(this);
+        //match.addSpectator(this);
 
         // hide spectators from the alive players in game
-        match.getAlivePlayers(match.getProfileMap()).forEach(profile -> {
-            profile.getPlayer().hidePlayer(player);
-        });
+        //match.getAlivePlayers(match.getProfileMap()).forEach(profile -> {
+        //    profile.getPlayer().hidePlayer(player);
+        //});
     }
 
     public void stopSpectatingMatch(){
 
         sendMessage("&cYou are no longer spectating a match...");
 
-        match.removeSpectator(this);
+        //match.removeSpectator(this);
 
         teleport(Practice.get().getConfigManager().getMainSpawn());
         PlayerUtil.resetPlayer(player);
         InventoryUtil.setSpawnInventory(player);
 
         // show player back to the players in match once the player is no longer spectating
-        match.getAlivePlayers(match.getProfileMap()).forEach(profile -> {
-            profile.getPlayer().showPlayer(player);
-        });
+        //match.getAlivePlayers(match.getProfileMap()).forEach(profile -> {
+        //    profile.getPlayer().showPlayer(player);
+        //});
 
         spectatingMatch = null;
     }
@@ -219,7 +219,7 @@ public class Profile {
     }
 
     public boolean hasLastMatchKit(){
-        return lastMatchKit != null;
+        return lastMatchLadder != null;
     }
 
     public boolean isSpectatingMatch(){
@@ -229,13 +229,13 @@ public class Profile {
     public Profile getMatchOpponent(){
 
         if (isInMatch()){
-            return match.getOpponents(this).get(0);
+            return match.getOpponentList(this).get(0);
         }
         return null;
     }
 
     public boolean isInQueue(){
-        return kitQueued != null;
+        return ladderQueued != null;
     }
 
     public boolean isInParty(){

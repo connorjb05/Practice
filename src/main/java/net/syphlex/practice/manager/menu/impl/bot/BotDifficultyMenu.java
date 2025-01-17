@@ -3,7 +3,7 @@ package net.syphlex.practice.manager.menu.impl.bot;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.arena.Arena;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.ItemBuilder;
@@ -14,12 +14,12 @@ import java.util.Arrays;
 
 public class BotDifficultyMenu extends Menu {
 
-    private final Kit kit;
+    private final Ladder ladder;
 
-    public BotDifficultyMenu(Kit kit) {
+    public BotDifficultyMenu(Ladder ladder) {
         super("Bot Difficulty", 27);
 
-        this.kit = kit;
+        this.ladder = ladder;
 
         for (int i = 0; i < size; i++) {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15));
@@ -84,7 +84,7 @@ public class BotDifficultyMenu extends Menu {
         switch (e.getSlot()) {
             case 12:
 
-                Arena arena = Practice.get().getArenaManager().getFreeArena(kit);
+                Arena arena = Practice.get().getArenaManager().getFreeArena(ladder);
 
                 // no arena was found!
                 if (arena == null) {

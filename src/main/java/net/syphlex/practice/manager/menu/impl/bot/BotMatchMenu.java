@@ -2,7 +2,7 @@ package net.syphlex.practice.manager.menu.impl.bot;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.util.StringUtil;
 import org.bukkit.Material;
@@ -24,11 +24,11 @@ public class BotMatchMenu extends Menu {
         }
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
-            if (kit.menuIcon != null) {
+            if (ladder.menuIcon != null) {
 
-                ItemStack itemStack = kit.menuIcon;
+                ItemStack itemStack = ladder.menuIcon;
                 ItemMeta itemMeta = itemStack.getItemMeta();
 
                 itemMeta.addItemFlags(ItemFlag.values());
@@ -52,10 +52,10 @@ public class BotMatchMenu extends Menu {
     public void onClickEvent(MenuClickEvent e) {
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
             if (e.getSlot() == slot) {
-                e.getProfile().openMenu(new BotDifficultyMenu(kit));
+                e.getProfile().openMenu(new BotDifficultyMenu(ladder));
                 break;
             }
 

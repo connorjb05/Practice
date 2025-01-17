@@ -3,11 +3,10 @@ package net.syphlex.practice.manager.queue;
 import lombok.Getter;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.arena.Arena;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.InventoryUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
 import java.util.*;
@@ -16,7 +15,7 @@ import java.util.logging.Level;
 
 public class QueueManager {
 
-    private final Map<Kit, Queue<Profile>> queueMap = new HashMap<>();
+    private final Map<Ladder, Queue<Profile>> queueMap = new HashMap<>();
 
     @Getter
     private final List<Profile> playersInMatch = new ArrayList<>();
@@ -27,22 +26,22 @@ public class QueueManager {
 
     public void onEnable(){
 
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
-            queueMap.put(kit, new ConcurrentLinkedQueue<>());
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
+            queueMap.put(ladder, new ConcurrentLinkedQueue<>());
         }
 
         executor.scheduleAtFixedRate(() -> {
 
-            for (Map.Entry<Kit, Queue<Profile>> entry : queueMap.entrySet()) {
-                Kit kit = entry.getKey();
+            for (Map.Entry<Ladder, Queue<Profile>> entry : queueMap.entrySet()) {
+                Ladder ladder = entry.getKey();
                 Queue<Profile> queue = entry.getValue();
 
                 if (Math.abs(System.currentTimeMillis() - lastMessageUpdate) > 5000L) {
 
-                    for (Profile queued : queueMap.get(kit)) {
+                    for (Profile queued : queueMap.get(ladder)) {
                         queued.sendMessage(" ");
                         queued.sendMessage(Practice.QUATERNARY_COLOR + "You are currently in the "
-                                + Practice.PRIMARY_COLOR + ChatColor.stripColor(kit.getName())
+                                + Practice.PRIMARY_COLOR + ChatColor.stripColor(ladder.getName())
                                 + Practice.QUATERNARY_COLOR + " queue.");
                         queued.sendMessage("&7Searching for a match...");
                         queued.sendMessage(" ");
@@ -62,15 +61,15 @@ public class QueueManager {
                             continue;
                         }
 
-                        Arena arena = Practice.get().getArenaManager().getFreeArena(kit);
+                        Arena arena = Practice.get().getArenaManager().getFreeArena(ladder);
 
                         // no arena was found!
                         if (arena == null) {
                             p1.sendMessage("&cNo arena was found.");
                             p2.sendMessage("&cNo arena was found.");
 
-                            p1.setKitQueued(null);
-                            p2.setKitQueued(null);
+                            p1.setLadderQueued(null);
+                            p2.setLadderQueued(null);
 
                             InventoryUtil.setSpawnInventory(p1.getPlayer());
                             InventoryUtil.setSpawnInventory(p2.getPlayer());
@@ -86,14 +85,14 @@ public class QueueManager {
                             continue;
                         }
 
-                        p1.setKitQueued(null);
-                        p2.setKitQueued(null);
+                        p1.setLadderQueued(null);
+                        p2.setLadderQueued(null);
 
                         Practice.get().getMatchManager().getMatchMap()
-                                .get(kit).add(new Match(
+                                .get(ladder).add(new Match(
                                         Collections.singletonList(p1),
                                         Collections.singletonList(p2),
-                                        null, arena, kit, true, false));
+                                        null, arena, ladder, true, false));
 
                     }
                 }
@@ -110,18 +109,18 @@ public class QueueManager {
         executor.shutdownNow();
     }
 
-    public synchronized void queue(Profile profile, Kit kit) {
+    public synchronized void queue(Profile profile, Ladder ladder) {
 
-        if (kit.inventory == null || kit.armor == null) {
+        if (ladder.inventory == null || ladder.armor == null) {
             profile.sendMessage("&cThere was an error while trying to queue for this kit.");
             return;
         }
 
-        if (!queueMap.get(kit).contains(profile)) {
+        if (!queueMap.get(ladder).contains(profile)) {
 
             profile.sendMessage(" ");
             profile.sendMessage("&aYou have been added to the "
-                    + ChatColor.stripColor(kit.getName()) + " queue.");
+                    + ChatColor.stripColor(ladder.getName()) + " queue.");
             profile.sendMessage("&7Searching for a match...");
             profile.sendMessage(" ");
 
@@ -129,9 +128,9 @@ public class QueueManager {
                 InventoryUtil.setQueuedInventory(profile.getPlayer());
             }
 
-            profile.setKitQueued(kit);
+            profile.setLadderQueued(ladder);
 
-            queueMap.get(kit).add(profile);
+            queueMap.get(ladder).add(profile);
 
         } else {
             profile.sendMessage("&cYou are already in a queue.");
@@ -140,20 +139,20 @@ public class QueueManager {
 
     public synchronized void dequeue(Profile profile) {
 
-        if (profile.getKitQueued() == null) {
+        if (profile.getLadderQueued() == null) {
             return;
         }
 
-        if (!queueMap.get(profile.getKitQueued()).contains(profile)) {
+        if (!queueMap.get(profile.getLadderQueued()).contains(profile)) {
             return;
         }
 
         profile.sendMessage("&cYou have left the "
-                + ChatColor.stripColor(profile.getKitQueued().getName()) + " queue.");
+                + ChatColor.stripColor(profile.getLadderQueued().getName()) + " queue.");
 
-        queueMap.get(profile.getKitQueued()).remove(profile);
+        queueMap.get(profile.getLadderQueued()).remove(profile);
 
-        profile.setKitQueued(null);
+        profile.setLadderQueued(null);
 
         if (!profile.isInMatch()) {
             InventoryUtil.setSpawnInventory(profile.getPlayer());
@@ -162,17 +161,17 @@ public class QueueManager {
 
     public void removeFromQueueMap(Profile profile){
 
-        if (profile.getKitQueued() == null) {
+        if (profile.getLadderQueued() == null) {
             return;
         }
 
-        queueMap.get(profile.getKitQueued()).remove(profile);
-        profile.setKitQueued(null);
+        queueMap.get(profile.getLadderQueued()).remove(profile);
+        profile.setLadderQueued(null);
     }
 
-    public int getInQueue(Kit kit){
+    public int getInQueue(Ladder ladder){
 
-        if (kit == null) {
+        if (ladder == null) {
             int total = 0;
             for (Queue<Profile> queue : queueMap.values()) {
                 total += queue.size();
@@ -180,12 +179,12 @@ public class QueueManager {
             return total;
         }
 
-        return queueMap.get(kit).size();
+        return queueMap.get(ladder).size();
     }
 
     public int getTotalInQueue(){
         int total = 0;
-        for (Map.Entry<Kit, Queue<Profile>> queueEntry : queueMap.entrySet()) {
+        for (Map.Entry<Ladder, Queue<Profile>> queueEntry : queueMap.entrySet()) {
             total += queueEntry.getValue().size();
         }
         return total;

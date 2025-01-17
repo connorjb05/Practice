@@ -2,7 +2,10 @@ package net.syphlex.practice.manager.event;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.syphlex.core.Core;
+import net.syphlex.core.playerdata.PlayerData;
 import net.syphlex.practice.Practice;
+import net.syphlex.practice.event.ProfileDamageEvent;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.*;
 import org.bukkit.Bukkit;
@@ -22,23 +25,28 @@ import java.util.concurrent.ConcurrentHashMap;
 @Setter
 public abstract class PracticeEvent implements Listener {
 
-    private final String identifier, displayName;
+    private final EventInfo info;
     private final YamlConfiguration config;
 
     // profile : (team #, alive?)
     private final Map<Profile, Pair<Integer, Boolean>> playerMap = new ConcurrentHashMap<>();
     private final Map<String, Object> configMap = new HashMap<>();
 
+    private String displayName = "";
+
     private Location spectateLoc;
+
+    private Profile host;
 
     public int gameTime = 60;
     public int round = 0;
 
+    public int teamSize = 1; // default size (can be max 3)
+
     public EventState eventState = EventState.STARTING;
 
-    public PracticeEvent(String identifier, String displayName, YamlConfiguration config){
-        this.identifier = identifier;
-        this.displayName = displayName;
+    public PracticeEvent(EventInfo info, YamlConfiguration config){
+        this.info = info;
         this.config = config;
 
         Bukkit.getPluginManager().registerEvents(this, Practice.get());
@@ -53,6 +61,8 @@ public abstract class PracticeEvent implements Listener {
         configMap.put(path, value);
     }
 
+    public void startEvent(){}
+
     public void endEvent(){
 
         for (Profile profile : playerMap.keySet()) {
@@ -63,22 +73,46 @@ public abstract class PracticeEvent implements Listener {
 
         gameTime = 60;
         round = 0;
+        teamSize = 1;
         eventState = EventState.STARTING;
+        displayName = info.getDisplayName();
 
         playerMap.clear();
     }
 
     public void joinEvent(Profile profile){
 
+        profile.setLastAttacker(null);
+        playerMap.put(profile, new Pair<>(-1, true));
+
+        PlayerUtil.resetPlayer(profile.getPlayer());
+        profile.teleport(spectateLoc);
+
+        sendEventMessage("&a" + profile.getPlayer().getName()
+                + " has joined the event. &7(" + getEventAlive() + ")");
     }
 
     public void leaveEvent(Profile profile){
 
+        profile.setLastAttacker(null);
+        playerMap.remove(profile);
+
+        sendEventMessage("&c" + profile.getPlayer().getName() + " has left the event.");
+
+        profile.sendMessage("&cYou have left the event.");
+
+        PlayerUtil.resetPlayer(profile.getPlayer());
+        InventoryUtil.setSpawnInventory(profile.getPlayer());
+        profile.teleport(Practice.get().getConfigManager().getMainSpawn());
     }
 
     public void spectateEvent(Profile profile){
         profile.sendMessage(Practice.QUATERNARY_COLOR + "You are now spectating the event.");
         playerMap.put(profile, new Pair<>(0, false));
+
+        sendEventMessage(Messages.EVENT_CHAT_PREFIX.get()
+                + Practice.PRIMARY_COLOR + profile.getPlayer().getName()
+                + Practice.QUATERNARY_COLOR + " is spectating the event.");
 
         PlayerUtil.resetPlayer(profile.getPlayer());
         profile.teleport(spectateLoc);
@@ -106,6 +140,20 @@ public abstract class PracticeEvent implements Listener {
 
     public void setTeam(Profile profile, int teamNumber){
         playerMap.put(profile, new Pair<>(teamNumber, true));
+    }
+
+    public boolean isSpectating(Profile profile) {
+        if (!playerMap.containsKey(profile)) {
+            return false;
+        }
+        return !playerMap.get(profile).getY();
+    }
+
+    public boolean isAlive(Profile profile){
+        if (!playerMap.containsKey(profile)) {
+            return false;
+        }
+        return playerMap.get(profile).getY();
     }
 
     public List<Profile> getTeam(int teamNumber){
@@ -148,17 +196,29 @@ public abstract class PracticeEvent implements Listener {
         switch (eventState) {
             case STARTING:
 
+                startEvent();
+
                 if (gameTime-- == 60
                         || gameTime == 30
                         || gameTime == 3
                         || gameTime == 2
                         || gameTime == 1) {
+
+                    String hostName = "&c&lConsole";
+
+                    if (host != null) {
+                        PlayerData data = Core.get().getPlayerDataManager().get(host.getPlayer());
+                        hostName = data.getRank().getColor() + host.getPlayer().getName();
+                    }
+
                     Bukkit.broadcastMessage(" ");
                     Bukkit.broadcastMessage(StringUtil.CC(Messages.EVENT_CHAT_PREFIX.get()
-                            + Practice.PRIMARY_COLOR + "<player> "
+                            + Practice.PRIMARY_COLOR + hostName + " "
                             + Practice.QUATERNARY_COLOR + "is hosting a "
-                            + Practice.PRIMARY_COLOR + "<event> Event"
-                            + Practice.QUATERNARY_COLOR + "! &a(Click to join)"));
+                            + Practice.PRIMARY_COLOR + displayName
+                            + Practice.QUATERNARY_COLOR + " Event! &a(Click to join)"));
+                    Bukkit.broadcastMessage(StringUtil.CC("&7&oEvent is starting in "
+                            + gameTime + " seconds..."));
                     Bukkit.broadcastMessage(" ");
                 }
 
@@ -166,10 +226,13 @@ public abstract class PracticeEvent implements Listener {
                     Bukkit.broadcastMessage(" ");
                     Bukkit.broadcastMessage(StringUtil.CC(Messages.EVENT_CHAT_PREFIX.get()
                             + Practice.QUATERNARY_COLOR
-                            + "The event has started! &a(Click to join)"));
+                            + "The event has started! &a(Click to spectate)"));
                     Bukkit.broadcastMessage(" ");
                     eventState = EventState.ONGOING;
                 }
+                break;
+            case ONGOING:
+                gameTime--;
                 break;
             case ENDED:
                 endEvent();
@@ -178,7 +241,21 @@ public abstract class PracticeEvent implements Listener {
     }
 
     @EventHandler
-    public void onEntityDamageEntityEvent(EntityDamageByEntityEvent e){
+    public void onProfileDamageEvent(ProfileDamageEvent e) {
+
+        final Profile profile = e.getVictim();
+
+        if (profile == null) {
+            return;
+        }
+
+        if (playerMap.containsKey(profile)) {
+
+            if (eventState == EventState.STARTING || isSpectating(profile)) {
+                e.setCancelled(true);
+                return;
+            }
+        }
     }
 
     public enum EventState {

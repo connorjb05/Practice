@@ -2,7 +2,7 @@ package net.syphlex.practice.manager.arena;
 
 import lombok.Getter;
 import net.syphlex.practice.Practice;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.util.StringUtil;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -41,7 +41,7 @@ public class ArenaManager {
                 Location corner1 = StringUtil.deserializeLocation(config.getString(arenaName + ".corner1"));
                 Location corner2 = StringUtil.deserializeLocation(config.getString(arenaName + ".corner2"));
                 Location spectate = StringUtil.deserializeLocation(config.getString(arenaName + ".spectate"));
-                List<Kit> kitList = StringUtil.deserializeKits(config.getStringList(arenaName + ".kits"));
+                List<Ladder> ladderList = StringUtil.deserializeKits(config.getStringList(arenaName + ".kits"));
 
                 Arena arena = new Arena(arenaName);
                 arena.setPosition1(pos1);
@@ -49,7 +49,7 @@ public class ArenaManager {
                 arena.setCorner1(corner1);
                 arena.setCorner2(corner2);
                 arena.setSpectate(spectate);
-                arena.getKits().addAll(kitList);
+                arena.getLadders().addAll(ladderList);
 
                 arenaMap.put(arenaName, arena);
             }
@@ -77,7 +77,7 @@ public class ArenaManager {
                 config.set(arena.getName() + ".corner1", StringUtil.serializeLocation(arena.getCorner1()));
                 config.set(arena.getName() + ".corner2", StringUtil.serializeLocation(arena.getCorner2()));
                 config.set(arena.getName() + ".spectate", StringUtil.serializeLocation(arena.getSpectate()));
-                config.set(arena.getName() + ".kits", StringUtil.serializeKits(arena.getKits()));
+                config.set(arena.getName() + ".kits", StringUtil.serializeKits(arena.getLadders()));
             }
 
             config.save(file);
@@ -91,7 +91,7 @@ public class ArenaManager {
         return arenaMap.containsKey(arenaName);
     }
 
-    public Arena getFreeArena(Kit kit) {
+    public Arena getFreeArena(Ladder ladder) {
 
         if (arenaMap.isEmpty()) {
             Practice.get().getLogger().log(Level.SEVERE, "No arenas were found when attempting match creation!");
@@ -100,7 +100,7 @@ public class ArenaManager {
 
         List<Arena> availableMaps = new ArrayList<>();
         for (Arena arena : arenaMap.values()) {
-            if (arena.getKits().contains(kit) && arena.isOpen()) {
+            if (arena.getLadders().contains(ladder) && arena.isOpen()) {
                 availableMaps.add(arena);
             }
         }

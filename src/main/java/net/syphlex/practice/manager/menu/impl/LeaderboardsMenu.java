@@ -2,13 +2,9 @@ package net.syphlex.practice.manager.menu.impl;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.leaderboards.LeaderboardPlayer;
 import net.syphlex.practice.manager.menu.Menu;
-import net.syphlex.practice.util.StringUtil;
-import net.syphlex.practice.Practice;
-import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.manager.leaderboards.LeaderboardPlayer;
 import net.syphlex.practice.util.StringUtil;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
@@ -30,22 +26,22 @@ public class LeaderboardsMenu extends Menu {
         }
 
         int slot = 10;
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
 
-            if (kit.menuIcon != null) {
+            if (ladder.menuIcon != null) {
 
-                ItemStack itemStack = kit.menuIcon;
+                ItemStack itemStack = ladder.menuIcon;
                 ItemMeta itemMeta = itemStack.getItemMeta();
 
                 itemMeta.addItemFlags(ItemFlag.values());
 
-                int inMatch = Practice.get().getMatchManager().getInMatch(kit);
-                int inQueue = Practice.get().getQueueManager().getInQueue(kit);
+                int inMatch = Practice.get().getMatchManager().getInMatch(ladder);
+                int inQueue = Practice.get().getQueueManager().getInQueue(ladder);
 
                 List<String> lore = new ArrayList<>();
 
                 int place = 1;
-                for (LeaderboardPlayer leaderboardPlayer : Practice.get().getLeaderboardManager().getLeaderboard(kit)) {
+                for (LeaderboardPlayer leaderboardPlayer : Practice.get().getLeaderboardManager().getLeaderboard(ladder)) {
                     lore.add(Practice.PRIMARY_COLOR + place + ". " + Practice.SECONDARY_COLOR
                             + leaderboardPlayer.getUsername() + "&7: " + Practice.PRIMARY_COLOR
                             + leaderboardPlayer.getElo() + " Elo");

@@ -2,7 +2,7 @@ package net.syphlex.practice.manager.profile;
 
 import lombok.Getter;
 import net.syphlex.practice.Practice;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.profile.objects.PlayerSettings;
 import net.syphlex.practice.util.InventoryUtil;
 import net.syphlex.practice.util.ItemUtil;
@@ -74,7 +74,7 @@ public class ProfileManager {
                     if (config.contains("kit-presets") && config.getConfigurationSection("kit-presets") != null) {
                         for (String kitName : config.getConfigurationSection("kit-presets").getKeys(false)) {
 
-                            Kit kit = Practice.get().getKitManager().getKitMap().get(kitName);
+                            Ladder ladder = Practice.get().getLadderManager().getLadderMap().get(kitName);
 
                             if (config.contains("kit-presets." + kitName + ".preset")) {
                                 List<String> inventoryData = config.getStringList(
@@ -82,7 +82,7 @@ public class ProfileManager {
 
                                 ItemStack[] inventory = ItemUtil.deserializeItemStack(inventoryData);
 
-                                profile.getKitPresets().put(kit, inventory);
+                                profile.getKitPresets().put(ladder, inventory);
                             }
                         }
                     }
@@ -139,12 +139,12 @@ public class ProfileManager {
                     config.set("settings.global_chat", profile.getSetting(PlayerSettings.GLOBAL_CHAT));
                     config.set("settings.in_match_chat", profile.getSetting(PlayerSettings.IN_MATCH_CHAT));
 
-                    for (Map.Entry<Kit, ItemStack[]> entry : profile.getKitPresets().entrySet()) {
+                    for (Map.Entry<Ladder, ItemStack[]> entry : profile.getKitPresets().entrySet()) {
 
-                        Kit kit = entry.getKey();
+                        Ladder ladder = entry.getKey();
                         ItemStack[] inventory = entry.getValue();
 
-                        config.set("kit-presets." + kit.getName() + ".preset",
+                        config.set("kit-presets." + ladder.getName() + ".preset",
                                 ItemUtil.serializeItemStack(inventory));
                     }
 

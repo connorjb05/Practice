@@ -1,35 +1,32 @@
 package net.syphlex.practice.manager.leaderboards;
 
 import net.syphlex.practice.Practice;
-import net.syphlex.practice.manager.kit.Kit;
-import net.syphlex.practice.Practice;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.EloUtil;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class LeaderboardManager {
 
-    private final Map<Kit, List<LeaderboardPlayer>> leaderboardMap = new ConcurrentHashMap<>();
-    private final Map<Kit, Map<UUID, LeaderboardPlayer>> playerDataMap = new ConcurrentHashMap<>();
+    private final Map<Ladder, List<LeaderboardPlayer>> leaderboardMap = new ConcurrentHashMap<>();
+    private final Map<Ladder, Map<UUID, LeaderboardPlayer>> playerDataMap = new ConcurrentHashMap<>();
 
     public void onEnable(){
 
         // load leaderboards for each kit/ladder
-        for (Kit kit : Practice.get().getKitManager().getKitMap().values()) {
-            leaderboardMap.put(kit, new ArrayList<>());
-            playerDataMap.put(kit, new ConcurrentHashMap<>());
+        for (Ladder ladder : Practice.get().getLadderManager().getLadderMap().values()) {
+            leaderboardMap.put(ladder, new ArrayList<>());
+            playerDataMap.put(ladder, new ConcurrentHashMap<>());
         }
 
         // load player data into cache maps
-        for (Kit kit : leaderboardMap.keySet()) {
+        for (Ladder ladder : leaderboardMap.keySet()) {
 
             try {
 
@@ -39,7 +36,7 @@ public class LeaderboardManager {
                     dir.mkdirs();
                 }
 
-                File file = new File(dir, kit.getName() + ".yml");
+                File file = new File(dir, ladder.getName() + ".yml");
 
                 if (!file.exists()) {
                     file.createNewFile();
@@ -59,7 +56,7 @@ public class LeaderboardManager {
 
                         LeaderboardPlayer leaderboardPlayer = new LeaderboardPlayer(uuid, elo, wins, loses);
 
-                        playerDataMap.get(kit).put(uuid, leaderboardPlayer);
+                        playerDataMap.get(ladder).put(uuid, leaderboardPlayer);
                     }
                 }
 
@@ -75,16 +72,16 @@ public class LeaderboardManager {
             @Override
             public void run(){
 
-                for (Kit kit : leaderboardMap.keySet()) {
+                for (Ladder ladder : leaderboardMap.keySet()) {
 
-                    Map<UUID, LeaderboardPlayer> playerData = playerDataMap.get(kit);
+                    Map<UUID, LeaderboardPlayer> playerData = playerDataMap.get(ladder);
 
                     List<LeaderboardPlayer> leaderboardList = playerData.values().stream()
                             .sorted((p1, p2) -> Integer.compare(p2.getElo(), p1.getElo()))
                             .limit(10)
                             .collect(Collectors.toList());
 
-                    leaderboardMap.put(kit, leaderboardList);
+                    leaderboardMap.put(ladder, leaderboardList);
                 }
 
             }
@@ -92,7 +89,7 @@ public class LeaderboardManager {
     }
 
     public void onDisable(){
-        for (Kit kit : playerDataMap.keySet()) {
+        for (Ladder ladder : playerDataMap.keySet()) {
 
             try {
 
@@ -102,7 +99,7 @@ public class LeaderboardManager {
                     dir.mkdirs();
                 }
 
-                File file = new File(dir, kit.getName() + ".yml");
+                File file = new File(dir, ladder.getName() + ".yml");
 
                 if (!file.exists()) {
                     file.createNewFile();
@@ -111,7 +108,7 @@ public class LeaderboardManager {
 
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
 
-                for (LeaderboardPlayer leaderboardPlayer : playerDataMap.get(kit).values()) {
+                for (LeaderboardPlayer leaderboardPlayer : playerDataMap.get(ladder).values()) {
                     config.createSection(leaderboardPlayer.getUuid().toString()
                             + ";" + leaderboardPlayer.getWins()
                             + ";" + leaderboardPlayer.getLoses()
@@ -127,25 +124,25 @@ public class LeaderboardManager {
         Practice.get().getLogger().info("Successfully saved and stored leaderboards for all kits.");
     }
 
-    public LeaderboardPlayer getLeaderboardPlayer(Kit kit, UUID uuid){
-        return playerDataMap.get(kit).get(uuid);
+    public LeaderboardPlayer getLeaderboardPlayer(Ladder ladder, UUID uuid){
+        return playerDataMap.get(ladder).get(uuid);
     }
 
-    public List<LeaderboardPlayer> getLeaderboard(Kit kit){
-        return leaderboardMap.getOrDefault(kit, Collections.emptyList());
+    public List<LeaderboardPlayer> getLeaderboard(Ladder ladder){
+        return leaderboardMap.getOrDefault(ladder, Collections.emptyList());
     }
 
-    public void updateLeaderboardPlayer(Kit kit, Profile profile, int wins, int loses){
+    public void updateLeaderboardPlayer(Ladder ladder, Profile profile, int wins, int loses){
 
         UUID uuid = profile.getPlayer().getUniqueId();
 
-        int opponentElo = getElo(profile.getMatchOpponent().getPlayer().getUniqueId(), kit);
+        int opponentElo = getElo(profile.getMatchOpponent().getPlayer().getUniqueId(), ladder);
 
-        int profileElo = getElo(uuid, kit);
+        int profileElo = getElo(uuid, ladder);
 
         int eloChange = EloUtil.calculateEloChange(profileElo, opponentElo, loses == 0);
 
-        playerDataMap.computeIfAbsent(kit, k -> new ConcurrentHashMap<>())
+        playerDataMap.computeIfAbsent(ladder, k -> new ConcurrentHashMap<>())
                 .compute(uuid, (key, existing) -> {
                     if (existing == null) {
                         return new LeaderboardPlayer(uuid, 1000 + eloChange, wins, loses);
@@ -157,10 +154,10 @@ public class LeaderboardManager {
                 });
     }
 
-    public int getElo(UUID uuid, Kit kit){
-        if (!playerDataMap.get(kit).containsKey(uuid)) {
+    public int getElo(UUID uuid, Ladder ladder){
+        if (!playerDataMap.get(ladder).containsKey(uuid)) {
             return 1000;
         }
-        return playerDataMap.get(kit).get(uuid).getElo();
+        return playerDataMap.get(ladder).get(uuid).getElo();
     }
 }

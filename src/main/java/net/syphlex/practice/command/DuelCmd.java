@@ -2,7 +2,7 @@ package net.syphlex.practice.command;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.arena.Arena;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.impl.DuelMenu;
 import net.syphlex.practice.manager.profile.Profile;
@@ -13,7 +13,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class DuelCmd extends AbstractCmd {
@@ -83,9 +82,9 @@ public class DuelCmd extends AbstractCmd {
                 }
             }
 
-            final Kit kit = profile.getDuelRequests().getRequestKit(requester);
+            final Ladder ladder = profile.getDuelRequests().getRequestKit(requester);
 
-            final Arena arena = Practice.get().getArenaManager().getFreeArena(kit);
+            final Arena arena = Practice.get().getArenaManager().getFreeArena(ladder);
 
             List<Profile> teamOne = new ArrayList<>();
             List<Profile> teamTwo = new ArrayList<>();
@@ -102,10 +101,10 @@ public class DuelCmd extends AbstractCmd {
             }
 
             Practice.get().getMatchManager().getMatchMap()
-                    .get(kit).add(new Match(
+                    .get(ladder).add(new Match(
                             teamOne,
                             teamTwo,
-                            null, arena, kit, false, false));
+                            null, arena, ladder, false, false));
 
             profile.sendMessage("&aYou accepted " + requester.getPlayer().getName() + "'s duel request...");
             requester.sendMessage("&a" + profile.getPlayer().getName() + " has accepted your duel request...");

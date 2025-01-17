@@ -1,7 +1,7 @@
 package net.syphlex.practice.manager.menu.impl.kiteditor;
 
 import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.InventoryUtil;
@@ -16,12 +16,12 @@ import java.util.Arrays;
  */
 public class KitEditorMenu extends Menu {
 
-    private final Kit kit;
+    private final Ladder ladder;
 
-    public KitEditorMenu(Kit kit) {
-        super("Layout Editor: " + kit.getName(), 27);
+    public KitEditorMenu(Ladder ladder) {
+        super("Layout Editor: " + ladder.getName(), 27);
 
-        this.kit = kit;
+        this.ladder = ladder;
 
         setEditable(true);
 
@@ -75,13 +75,13 @@ public class KitEditorMenu extends Menu {
 
             switch (e.getSlot()) {
                 case 11:
-                    profile.saveKitPreset(kit, profile.getPlayer().getInventory().getContents());
+                    profile.saveKitPreset(ladder, profile.getPlayer().getInventory().getContents());
                     //profile.getKitPresets().put(kit, profile.getPlayer().getInventory().getContents());
-                    profile.sendMessage("&aSaved your " + kit.getName() + " kit layout.");
+                    profile.sendMessage("&aSaved your " + ladder.getName() + " kit layout.");
                     profile.sendMessage("&7You may close out of the menu.");
                     break;
                 case 13:
-                    profile.getPlayer().getInventory().setContents(kit.getInventory());
+                    profile.getPlayer().getInventory().setContents(ladder.getInventory());
                     break;
                 case 15:
                     profile.getPlayer().closeInventory();

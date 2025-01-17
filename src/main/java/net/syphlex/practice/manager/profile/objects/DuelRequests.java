@@ -1,6 +1,6 @@
 package net.syphlex.practice.manager.profile.objects;
 
-import net.syphlex.practice.manager.kit.Kit;
+import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.profile.Profile;
 
 import java.util.HashMap;
@@ -8,19 +8,19 @@ import java.util.Map;
 
 public class DuelRequests {
 
-    private final Map<Profile, Kit> requestMap = new HashMap<>();
+    private final Map<Profile, Ladder> requestMap = new HashMap<>();
     private final Map<Profile, Long> requestTimeMap = new HashMap<>();
 
     public boolean isRequestFrom(Profile requester){
         return requestMap.containsKey(requester);
     }
 
-    public Kit getRequestKit(Profile requester){
+    public Ladder getRequestKit(Profile requester){
         return requestMap.get(requester);
     }
 
-    public void addRequest(Profile requester, Kit kit){
-        requestMap.put(requester, kit);
+    public void addRequest(Profile requester, Ladder ladder){
+        requestMap.put(requester, ladder);
         requestTimeMap.put(requester, System.currentTimeMillis());
     }
 
