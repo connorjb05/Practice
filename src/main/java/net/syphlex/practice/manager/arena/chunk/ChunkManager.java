@@ -1,10 +1,9 @@
-package net.syphlex.practice.manager.arena;
+package net.syphlex.practice.manager.arena.chunk;
 
 import lombok.Getter;
 import net.syphlex.practice.Practice;
+import net.syphlex.practice.manager.arena.Arena;
 import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashSet;
@@ -16,11 +15,26 @@ public class ChunkManager {
     private final Set<Chunk> chunks = new HashSet<>();
 
     public void onEnable(){
+
+        final int radius = 8;
+
         new BukkitRunnable(){
             @Override
             public void run(){
                 for (Arena arena : Practice.get().getArenaManager().getArenaMap().values()) {
 
+                    int chunkX = arena.getSpectate().getBlockX();
+                    int chunkZ = arena.getSpectate().getBlockZ();
+
+                    for (int x = chunkX - radius; x <= chunkX + radius; x++) {
+                        for (int z = chunkZ - radius; z <= chunkZ - radius; z++) {
+                            Chunk chunk = arena.getWorld().getChunkAt(chunkX, chunkZ);
+                            chunks.add(chunk);
+                            chunk.load(true);
+                        }
+                    }
+
+                    /*
                     int chunkMaxX = arena.getMaxX() >> 4;
                     int chunkMinX = arena.getMinX() >> 4;
                     int chunkMaxZ = arena.getMaxZ() >> 4;
@@ -33,8 +47,10 @@ public class ChunkManager {
                             chunks.add(chunk);
                         }
                     }
+
+                     */
                 }
-                Practice.get().getLogger().info("Successfully loaded all arena chunks.");
+                Practice.get().getLogger().info("Successfully loaded and saved all arena chunks.");
             }
         }.runTaskLater(Practice.get(), 10L);
     }

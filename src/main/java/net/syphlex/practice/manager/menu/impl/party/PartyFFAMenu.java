@@ -4,6 +4,7 @@ import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.ladder.Ladder;
+import net.syphlex.practice.manager.ladder.impl.BedFightLadder;
 import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
@@ -21,7 +22,7 @@ import java.util.List;
 
 public class PartyFFAMenu extends Menu {
     public PartyFFAMenu() {
-        super("Party FFA Match", 27);
+        super("Party FFA Match", 36);
 
         for (int i = 0; i < size; i++) {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15));
@@ -32,7 +33,7 @@ public class PartyFFAMenu extends Menu {
 
             if (ladder.menuIcon != null) {
 
-                ItemStack itemStack = ladder.menuIcon;
+                ItemStack itemStack = ladder.menuIcon.clone();
                 ItemMeta itemMeta = itemStack.getItemMeta();
 
                 itemMeta.addItemFlags(ItemFlag.values());
@@ -44,6 +45,8 @@ public class PartyFFAMenu extends Menu {
 
                 itemMeta.setLore(StringUtil.CC(lore));
                 itemStack.setItemMeta(itemMeta);
+
+                itemStack.setAmount(1);
 
                 inventory.setItem(slot, itemStack);
             }
@@ -68,16 +71,17 @@ public class PartyFFAMenu extends Menu {
 
             if (e.getSlot() == slot) {
 
+                if (ladder instanceof BridgeLadder
+                        || ladder instanceof BedFightLadder) {
+                    profile.sendMessage("&cThis ladder cannot be selected for FFA party matches.");
+                    return;
+                }
+
                 Arena arena = Practice.get().getArenaManager().getFreeArena(ladder);
 
                 // no arena was found!
                 if (arena == null) {
                     party.sendPartyMessage("&cNo arena found.");
-                    return;
-                }
-
-                if (ladder instanceof BridgeLadder) {
-                    profile.sendMessage("&cThis kit cannot be selected for FFA Party matches");
                     return;
                 }
 

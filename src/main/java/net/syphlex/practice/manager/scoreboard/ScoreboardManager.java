@@ -2,8 +2,10 @@ package net.syphlex.practice.manager.scoreboard;
 
 import fr.mrmicky.fastboard.FastBoard;
 import net.syphlex.practice.Practice;
+import net.syphlex.practice.manager.ladder.impl.BedFightLadder;
 import net.syphlex.practice.manager.ladder.impl.BoxingLadder;
 import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
+import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.match.MatchState;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.manager.profile.objects.PlayerSettings;
@@ -92,36 +94,26 @@ public class ScoreboardManager {
 
             if (!profile.getMatch().isFfa()) {
 
-                int team = profile.getMatch().getProfileMap().get(profile).getX();
-
                 if (!(profile.getMatch().getLadder() instanceof BridgeLadder)) {
                     lines.add(" ");
                     lines.add(Practice.PRIMARY_COLOR + "» "
                             + Practice.SECONDARY_COLOR
                             + "Your Team: "
-                            + Practice.PRIMARY_COLOR + profile.getMatch().getAliveFromPlayerTeam(profile).size()
-                            + "/" + profile.getMatch().getPlayerTeam(profile).size());
+                            + Practice.PRIMARY_COLOR + profile.getMatch().getTeam(profile).getAliveCount()
+                            + "/" + profile.getMatch().getTeam(profile).getCount());
                     lines.add(Practice.PRIMARY_COLOR + "» "
                             + Practice.SECONDARY_COLOR
                             + "Other Team: "
-                            + Practice.PRIMARY_COLOR + profile.getMatch().getAliveOpponentList(profile).size()
-                            + "/" + profile.getMatch().getOpponentList(profile).size());
+                            + Practice.PRIMARY_COLOR + profile.getMatch().getOpponents(profile).getAliveCount()
+                            + "/" + profile.getMatch().getOpponents(profile).getCount());
                 }
 
                 if (profile.getMatch().getLadder() instanceof BoxingLadder) {
 
-                    int teamOneHits = 0;
-                    int teamTwoHits = 0;
+                    int teamHits = profile.getMatch().getTeam(profile).getTeamHits();
+                    int opponentsHits = profile.getMatch().getOpponents(profile).getTeamHits();
 
-                    for (Profile t1 : profile.getMatch().getAliveFromTeam(1)) {
-                        teamOneHits += t1.getHits();
-                    }
-
-                    for (Profile t2 : profile.getMatch().getAliveFromTeam(2)) {
-                        teamTwoHits += t2.getHits();
-                    }
-
-                    int difference = team == 1 ? teamOneHits - teamTwoHits : teamTwoHits - teamOneHits;
+                    int difference = teamHits - opponentsHits;
 
                     String differenceAsString = "&7(0)";
 
@@ -135,10 +127,15 @@ public class ScoreboardManager {
                     lines.add("&b&lHits: " + differenceAsString);
                     lines.add(Practice.PRIMARY_COLOR + " » "
                             + Practice.SECONDARY_COLOR + "Your Team: "
-                            + Practice.PRIMARY_COLOR + (team == 1 ? teamOneHits : teamTwoHits));
+                            + Practice.PRIMARY_COLOR + teamHits);
                     lines.add(Practice.PRIMARY_COLOR + " » "
-                            + Practice.SECONDARY_COLOR + "Them: "
-                            + Practice.PRIMARY_COLOR + (team == 1 ? teamTwoHits : teamOneHits));
+                            + Practice.SECONDARY_COLOR + "Other Team: "
+                            + Practice.PRIMARY_COLOR + opponentsHits);
+
+                    lines.add(" ");
+                    lines.add(Practice.PRIMARY_COLOR + "» "
+                            + Practice.SECONDARY_COLOR + "Combo: "
+                            + Practice.PRIMARY_COLOR + profile.getCombo());
                 }
             }
 
@@ -168,35 +165,40 @@ public class ScoreboardManager {
 
             if (profile.getMatch().getLadder() instanceof BridgeLadder) {
                 getBridgeKitBoard(profile, lines);
+            } else if (profile.getMatch().getLadder() instanceof BedFightLadder) {
+                getBedFightBoard(profile, lines);
             } else {
                 lines.add(Practice.PRIMARY_COLOR + "» "
                         + Practice.SECONDARY_COLOR + "Their Ping: "
-                        + Practice.PRIMARY_COLOR + profile.getMatchOpponent().getPing() + "ms");
+                        + Practice.PRIMARY_COLOR + profile.getMatch().getOpponents(profile).getAsList().get(0).getPing() + "ms");
             }
 
             if (profile.getMatch().getLadder() instanceof BoxingLadder) {
 
-                int profileHits = profile.getHits();
-                int opponentHits = profile.getMatchOpponent().getHits();
+                if (profile.getMatch().getOpponents(profile).getAsList().get(0) != null) {
 
-                int difference = profileHits - opponentHits;
+                    int profileHits = profile.getHits();
+                    int opponentHits = profile.getMatch().getOpponents(profile).getAsList().get(0).getHits();
 
-                String differenceAsString = "&7(0)";
+                    int difference = profileHits - opponentHits;
 
-                if (difference < 0) {
-                    differenceAsString = "&c(" + (difference) + ")";
-                } else if (difference > 0) {
-                    differenceAsString = "&a(+" + (difference) + ")";
+                    String differenceAsString = "&7(0)";
+
+                    if (difference < 0) {
+                        differenceAsString = "&c(" + (difference) + ")";
+                    } else if (difference > 0) {
+                        differenceAsString = "&a(+" + (difference) + ")";
+                    }
+
+                    lines.add(" ");
+                    lines.add(Practice.PRIMARY_COLOR + "&lHits: " + differenceAsString);
+                    lines.add(Practice.PRIMARY_COLOR + " » "
+                            + Practice.SECONDARY_COLOR + "You: "
+                            + Practice.PRIMARY_COLOR + profileHits);
+                    lines.add(Practice.PRIMARY_COLOR + " » "
+                            + Practice.SECONDARY_COLOR + "Them: "
+                            + Practice.PRIMARY_COLOR + opponentHits);
                 }
-
-                lines.add(" ");
-                lines.add(Practice.PRIMARY_COLOR + "&lHits: " + differenceAsString);
-                lines.add(Practice.PRIMARY_COLOR + " » "
-                        + Practice.SECONDARY_COLOR + "You: "
-                        + Practice.PRIMARY_COLOR + profileHits);
-                lines.add(Practice.PRIMARY_COLOR + " » "
-                        + Practice.SECONDARY_COLOR + "Them: "
-                        + Practice.PRIMARY_COLOR + opponentHits);
             }
 
             lines.add(" ");
@@ -211,32 +213,45 @@ public class ScoreboardManager {
 
         if (profile.getMatch().getLadder() instanceof BridgeLadder) {
 
+            final Match match = profile.getMatch();
+
             StringBuilder teamOneScoreString = new StringBuilder();
             StringBuilder teamTwoScoreString = new StringBuilder();
 
-            for (int i = 0; i < profile.getMatch().getTeamOneScore(); i++) {
-                teamOneScoreString.append("&b⬤");
+            for (int i = 0; i < match.getTeamOne().getScore(); i++) {
+                teamOneScoreString.append(match.getTeamOne().getTeamColor()).append("⬤");
             }
 
-            for (int i = 0; i < profile.getMatch().getTeamTwoScore(); i++) {
-                teamTwoScoreString.append("&b⬤");
+            for (int i = 0; i < match.getTeamTwo().getScore(); i++) {
+                teamTwoScoreString.append(match.getTeamTwo().getTeamColor()).append("⬤");
             }
 
-            for (int i = profile.getMatch().getTeamOneScore(); i < 5; i++) {
+            for (int i = match.getTeamOne().getScore(); i < 5; i++) {
                 teamOneScoreString.append("&7⬤");
             }
 
-            for (int i = profile.getMatch().getTeamTwoScore(); i < 5; i++) {
+            for (int i = match.getTeamTwo().getScore(); i < 5; i++) {
                 teamTwoScoreString.append("&7⬤");
             }
 
             lines.add(" ");
-            lines.add(Practice.PRIMARY_COLOR + "&lTeam One:");
-            lines.add(Practice.SECONDARY_COLOR + " » " + teamOneScoreString.toString());
-            lines.add(" ");
-            lines.add(Practice.PRIMARY_COLOR + "&lTeam Two:");
-            lines.add(Practice.SECONDARY_COLOR + " » " + teamTwoScoreString.toString());
+            lines.add(Practice.PRIMARY_COLOR + "» " + match.getTeamOne().getTeamColor() + "[R] &7: " + teamOneScoreString);
+            lines.add(Practice.PRIMARY_COLOR + "» " + match.getTeamTwo().getTeamColor() + "[B] &7: " + teamTwoScoreString);
         }
+
+        return lines;
+    }
+
+    public List<String> getBedFightBoard(Profile profile, List<String> lines){
+
+        final Match match = profile.getMatch();
+
+        final boolean redBed = match.getTeamOne().isHasBed();
+        final boolean blueBed = match.getTeamTwo().isHasBed();
+
+        lines.add(" ");
+        lines.add(Practice.PRIMARY_COLOR + "» " + match.getTeamOne().getTeamColor() + "[R] &7: " + (redBed ? "&a✔" : "&c✘"));
+        lines.add(Practice.PRIMARY_COLOR + "» " + match.getTeamTwo().getTeamColor() + "[B] &7: " + (blueBed ? "&a✔" : "&c✘"));
 
         return lines;
     }

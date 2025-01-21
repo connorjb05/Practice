@@ -11,6 +11,12 @@ public class SpawnCmd extends AbstractCmd {
 
     @Override
     public void onCommand(Profile profile, String[] args) {
+
+        if (profile.isInMatch()) {
+            profile.getMatch().eliminate(profile);
+            profile.reset();
+        }
+
         profile.teleport(Practice.get().getConfigManager().getMainSpawn());
     }
 }

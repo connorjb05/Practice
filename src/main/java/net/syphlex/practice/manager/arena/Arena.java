@@ -6,20 +6,53 @@ import lombok.Setter;
 import net.syphlex.practice.manager.ladder.Ladder;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @Setter
 @RequiredArgsConstructor
 public class Arena {
-    private final String name;
-    private final List<Ladder> ladders = new ArrayList<>();
+    private String name;
+    private final Set<Ladder> ladders = new TreeSet<>(Comparator.comparing(Ladder::getName));
     private Location position1, position2,
             corner1, corner2, spectate;
 
     private boolean open = true;
+
+    public Arena(String name){
+        this.name = name;
+    }
+
+    public void removeEntities(){
+
+        if (spectate == null) {
+            return;
+        }
+
+        for (Entity entity : getWorld().getEntities()) {
+
+            if (entity instanceof Player)
+                continue;
+
+            double distance = entity.getLocation().distanceSquared(spectate);
+
+            if (distance <= 2500) {
+                entity.remove();
+            }
+        }
+    }
+
+    public String getSize(){
+
+        if (corner1 == null || corner2 == null) {
+            return "N/A";
+        }
+
+        return (Math.abs(getMaxX()-getMinX()) + "x" + Math.abs(getMaxZ()-getMinZ()));
+    }
 
     public boolean isLocationInsideArena(Location location) {
 
@@ -82,7 +115,7 @@ public class Arena {
     public int getMinY(){
 
         if (corner1 == null || corner2 == null) {
-            return Integer.MAX_VALUE;
+            return 7;
         }
 
         return Math.min(corner1.getBlockY(), corner2.getBlockY());

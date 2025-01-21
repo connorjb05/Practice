@@ -19,6 +19,11 @@ public class ConfigManager {
 
     private Location mainSpawn;
 
+    private boolean fastPotions;
+
+    private double potionSpeed = 1.0;
+
+
     public void onEnable(){
         File file = new File(Practice.get().getDataFolder(), "syphlex.yml");
 
@@ -32,10 +37,14 @@ public class ConfigManager {
 
             config.options().copyDefaults(true);
             config.addDefault("main-spawn", "null");
+            config.addDefault("fast-potions", true);
+            config.addDefault("potion-speed", 1.0);
 
             config.save(file);
 
             mainSpawn = StringUtil.deserializeLocation(config.getString("main-spawn"));
+            fastPotions = config.getBoolean("fast-potions");
+            potionSpeed = config.getDouble("potion-speed");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -54,6 +63,9 @@ public class ConfigManager {
             FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
             config.set("main-spawn", StringUtil.serializeLocation(mainSpawn));
+            if (config.getBoolean("fast-potions") != fastPotions) {
+                config.set("fast-potions", fastPotions);
+            }
 
             config.save(file);
         } catch (IOException e) {

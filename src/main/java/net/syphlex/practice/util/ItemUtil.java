@@ -152,6 +152,14 @@ public class ItemUtil {
         return itemStacks;
     }
 
+    public ItemStack getLeaveMatchSpectateItem(){
+        return new ItemBuilder()
+                .setMaterial(Material.INK_SACK)
+                .setDurability((short)1)
+                .setName("&cStop Spectating &7(Right Click)")
+                .build();
+    }
+
     public ItemStack getLeaveEventItem(){
         return new ItemBuilder()
                 .setMaterial(Material.INK_SACK)
@@ -214,7 +222,7 @@ public class ItemUtil {
     public ItemStack getSettingsItem(){
         return new ItemBuilder()
                 .setMaterial(Material.SKULL_ITEM)
-                .setName(Practice.PRIMARY_COLOR + "Profile Settings &7(Right Click)")
+                .setName(Practice.PRIMARY_COLOR + "Settings &7(Right Click)")
                 .build();
     }
 

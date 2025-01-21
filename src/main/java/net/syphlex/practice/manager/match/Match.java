@@ -1,23 +1,24 @@
 package net.syphlex.practice.manager.match;
 
-import com.ngxdev.knockback.KnockbackModule;
+//import com.ngxdev.knockback.KnockbackModule;
 import lombok.Getter;
 import lombok.Setter;
 import net.syphlex.core.Core;
 import net.syphlex.core.rank.Rank;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.arena.Arena;
+import net.syphlex.practice.manager.arena.block.BlockTracker;
 import net.syphlex.practice.manager.ladder.Ladder;
+import net.syphlex.practice.manager.ladder.impl.BedFightLadder;
+import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
+import net.syphlex.practice.manager.match.team.MatchTeam;
 import net.syphlex.practice.manager.party.Party;
 import net.syphlex.practice.manager.profile.Profile;
+import net.syphlex.practice.manager.profile.objects.InventorySnapshot;
 import net.syphlex.practice.manager.profile.objects.PlayerState;
-import net.syphlex.practice.util.InventoryUtil;
-import net.syphlex.practice.util.ItemUtil;
-import net.syphlex.practice.util.Pair;
-import net.syphlex.practice.util.PlayerUtil;
-import org.bukkit.Material;
+import net.syphlex.practice.util.*;
+import org.bukkit.GameMode;
 import org.bukkit.Sound;
-import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -27,11 +28,15 @@ import java.util.*;
 @Setter
 public class Match {
 
+    private final UUID uuid;
+
+    private final MatchInventories matchInventories;
+
     private final List<Profile> spectators = new ArrayList<>();
 
-    private final Map<Profile, Pair<Integer, Boolean>> profileMap = new HashMap<>();
-
-    private final List<Block> placedBlocks = new ArrayList<>();
+    private final MatchTeam teamFFA = new MatchTeam("&c", "FFA", 0);
+    private final MatchTeam teamOne = new MatchTeam("&c", "Red", 1);
+    private final MatchTeam teamTwo = new MatchTeam("&9", "Blue", 2);
 
     private final Party party;
     private final Arena arena;
@@ -39,9 +44,9 @@ public class Match {
     private final boolean queuedMatch;
     private final boolean ffa;
 
-    private int duration = 6;
+    private final BlockTracker blockTracker;
 
-    private int teamOneScore = 0, teamTwoScore = 0;
+    private int duration = 6;
 
     private MatchState matchState = MatchState.STARTING;
 
@@ -61,11 +66,18 @@ public class Match {
     public Match(List<Profile> teamOneParam, List<Profile> teamTwoParam,
                  Party party, Arena arena, Ladder ladder, boolean queuedMatch, boolean ffa) {
 
+        // generate a random UUID for the match identification
+        this.uuid = UUID.randomUUID();
+
+        this.matchInventories = new MatchInventories();
+
         this.party = party;
         this.arena = arena;
         this.ladder = ladder;
         this.queuedMatch = queuedMatch;
         this.ffa = ffa;
+
+        this.blockTracker = new BlockTracker(arena);
 
         setupMatch(teamOneParam, teamTwoParam);
     }
@@ -101,11 +113,12 @@ public class Match {
             if (ffa) {
 
                 // setup players
+
                 for (Profile profile : members) {
-                    profileMap.put(profile, new Pair<>(0, true));
-                    setupPlayer(profile, 0);
+                    teamFFA.add(profile);
                 }
 
+                teamFFA.setupPlayers(this);
             }
             // if match is not free for all and is a party split event teams will be assigned.
             else {
@@ -117,10 +130,17 @@ public class Match {
                 int i = 0;
                 for (Profile profile : members) {
                     int teamNumber = (i % 2) + 1;
-                    profileMap.put(profile, new Pair<>(teamNumber, true));
-                    setupPlayer(profile, teamNumber);
+                    if (teamNumber == 1) {
+                        teamOne.add(profile);
+                    } else {
+                        teamTwo.add(profile);
+                    }
                     i++;
                 }
+
+                // setup players in each team
+                teamOne.setupPlayers(this);
+                teamTwo.setupPlayers(this);
             }
         }
         // the match is a duel/queued match
@@ -137,10 +157,17 @@ public class Match {
             int i = 0;
             for (Profile profile : players) {
                 int teamNumber = (i % 2) + 1;
-                profileMap.put(profile, new Pair<>(teamNumber, true));
-                setupPlayer(profile, teamNumber);
+                if (teamNumber == 1) {
+                    teamOne.add(profile);
+                } else {
+                    teamTwo.add(profile);
+                }
                 i++;
             }
+
+            // setup players in each team
+            teamOne.setupPlayers(this);
+            teamTwo.setupPlayers(this);
         }
 
         startMatch();
@@ -157,8 +184,12 @@ public class Match {
      */
     private void startMatch() {
 
+        List<Profile> players = new ArrayList<>(teamFFA.getAsList());
+        players.addAll(teamOne.getTeamMap().keySet());
+        players.addAll(teamTwo.getTeamMap().keySet());
+
         // Loop through each profile in the match to send initial match information
-        for (Profile profile : profileMap.keySet()) {
+        for (Profile profile : players) {
 
             // Send match title and ladder info to each player
             profile.sendMessage(" ");
@@ -168,7 +199,7 @@ public class Match {
                     + Practice.PRIMARY_COLOR + ladder.getName());
 
             // Get the player's opponents in the match
-            List<Profile> opponents = getOpponentList(profile);
+            List<Profile> opponents = getOpponents(profile).getAsList();
 
             // If there are multiple opponents (e.g., team vs team), list them
             if (opponents.size() > 1) {
@@ -209,8 +240,8 @@ public class Match {
 
                 // If it's a team-based match, check if either team is completely eliminated
                 if (!ffa) {
-                    List<Profile> teamOne = getAliveFromTeam(1);
-                    List<Profile> teamTwo = getAliveFromTeam(2);
+                    List<Profile> teamOne = Match.this.teamOne.getAsList();
+                    List<Profile> teamTwo = Match.this.teamTwo.getAsList();
 
                     // End the match if one team is eliminated
                     if (teamOne.isEmpty()) {
@@ -225,7 +256,7 @@ public class Match {
 
                     // If it's a Free-For-All (FFA) match, check if there's only one player left
                 } else {
-                    List<Profile> ffa = getAliveFromTeam(0);
+                    List<Profile> ffa = Match.this.teamFFA.getAsList();
 
                     // End the match if there's only one player left in FFA
                     if (ffa.size() == 1) {
@@ -242,7 +273,7 @@ public class Match {
                     playMatchSound(Sound.CLICK); // Play a click sound for countdown
 
                     // When the countdown reaches zero, start the match
-                } else if (duration <= 0) {
+                } else {
                     sendMatchMessage("&aMatch started!"); // Inform players that the match has started
                     sendMatchTitle(" "); // Clear the countdown title
                     playMatchSound(Sound.FIREWORK_BLAST); // Play a sound indicating the match has started
@@ -250,22 +281,12 @@ public class Match {
                     matchState = MatchState.ONGOING; // Set the match state to ONGOING
 
                     cancel(); // Cancel the countdown task as the match is now live
+                    matchTask = null;
                 }
             }
         }.runTaskTimer(Practice.get(), 0L, 20L); // Schedule this task to run every second (20 ticks)
     }
 
-    /**
-     * Ends the match, either normally or due to a forced end (e.g., server restart/crash).
-     *
-     * This method handles the termination of the match, including:
-     * - Cancelling any ongoing match tasks.
-     * - Handling the forced end scenario (e.g., server restart/crash).
-     * - Properly resetting the state of all players.
-     * - Cleaning up any match-related resources (e.g., blocks, match state).
-     *
-     * @param forceEnd If true, forces the match to end immediately (e.g., for server crashes or restarts).
-     */
     public void endMatch(boolean forceEnd) {
 
         // If there's an ongoing match task, cancel it to stop any further match actions
@@ -273,44 +294,196 @@ public class Match {
             matchTask.cancel();
         }
 
+        sendMatchMessage(" ");
+        sendMatchMessage(Practice.PRIMARY_COLOR + "&lMatch Results &7(Click on names to view inventories)");
+
+        if (ffa) {
+
+            // only one player will return from this
+            List<Profile> winner = teamFFA.getAliveList();
+            //List<Profile> totalPlayers = teamFFA.getAsList();
+
+            //totalPlayers.remove(winner.get(0));
+
+            teamFFA.sendClickableMessage(
+                    Practice.QUATERNARY_COLOR + " » &aWinner: &f"
+                            + winner.get(0).getPlayer().getDisplayName(),
+                    "inventory " + uuid.toString() + " "
+                            + winner.get(0).getPlayer().getUniqueId().toString());
+
+            sendMatchMessage(Practice.QUATERNARY_COLOR + " » &cLosers:");
+
+            winner.forEach(players -> {
+                players.sendClickableMessage(
+                        Practice.SECONDARY_COLOR + "    » "
+                                + players.getPlayer().getDisplayName(),
+                        "inventory " + uuid.toString() + " " + players.getPlayer().getUniqueId().toString()
+                );
+            });
+
+            teamFFA.getListWithoutProfile(winner.get(0))
+                            .forEach(players -> {
+                                players.sendClickableMessage(
+                                        Practice.SECONDARY_COLOR + "    » "
+                                                + players.getPlayer().getDisplayName(),
+                                        "inventory " + uuid.toString() + " "
+                                                + players.getPlayer().getUniqueId().toString());
+                                    }
+                            );
+
+            sendMatchMessage(" ");
+        } else {
+
+            List<Profile> teamOne = Match.this.teamOne.getAsList();
+            List<Profile> teamTwo = Match.this.teamTwo.getAsList();
+
+            if (Match.this.teamTwo.getAliveList().isEmpty() || Match.this.teamOne.getScore() >= 5) {
+                // team one won
+                if (Match.this.teamOne.getCount() > 1) {
+
+                    sendMatchMessage(Practice.QUATERNARY_COLOR + " » &aWinners: ");
+
+                    for (Profile winners : teamOne) {
+                        sendClickableMatchMessage(Practice.SECONDARY_COLOR + "    » "
+                                        + winners.getPlayer().getDisplayName(),
+                                "inventory " + uuid.toString() + " "
+                                        + winners.getPlayer().getUniqueId().toString());
+                    }
+
+                } else {
+
+                    Profile winner = teamOne.get(0);
+
+                    sendClickableMatchMessage(Practice.QUATERNARY_COLOR + " » &aWinner: &f"
+                                    + winner.getPlayer().getDisplayName(),
+                            "inventory " + uuid.toString() + " "
+                                    + winner.getPlayer().getUniqueId().toString());
+                }
+                if (Match.this.teamTwo.getCount() > 1) {
+
+                    sendMatchMessage(Practice.QUATERNARY_COLOR + " » &cLosers: ");
+
+                    for (Profile losers : teamTwo) {
+                        sendClickableMatchMessage(Practice.SECONDARY_COLOR + "    » "
+                                        + losers.getPlayer().getDisplayName(),
+                                "inventory " + uuid.toString() + " "
+                                        + losers.getPlayer().getUniqueId().toString());
+                    }
+
+                } else {
+
+                    Profile profile = teamTwo.get(0);
+
+                    sendClickableMatchMessage(
+                            Practice.QUATERNARY_COLOR + " » &cLoser: &f"
+                                    + profile.getPlayer().getDisplayName(),
+                            "inventory " + uuid.toString() + " "
+                                    + profile.getPlayer().getUniqueId().toString());
+                }
+            } else {
+                // team two won
+                if (Match.this.teamTwo.getCount() > 1) {
+
+                    sendMatchMessage(Practice.QUATERNARY_COLOR + " » &aWinners: ");
+
+                    for (Profile winners : teamTwo) {
+                        sendClickableMatchMessage(
+                                Practice.SECONDARY_COLOR + "    » "
+                                        + winners.getPlayer().getDisplayName(),
+                                "inventory " + uuid.toString() + " "
+                                        + winners.getPlayer().getUniqueId().toString());
+                    }
+
+                } else {
+
+                    Profile winner = teamTwo.get(0);
+
+                    sendClickableMatchMessage(Practice.QUATERNARY_COLOR + " » &aWinner: &f"
+                                    + winner.getPlayer().getDisplayName(),
+                            "inventory " + uuid.toString() + " "
+                                    + winner.getPlayer().getUniqueId().toString());
+                }
+
+                if (Match.this.teamOne.getCount() > 1) {
+
+                    sendMatchMessage(Practice.QUATERNARY_COLOR + " » &cLosers: ");
+
+                    for (Profile losers : teamOne) {
+                        sendClickableMatchMessage(Practice.SECONDARY_COLOR + "    » "
+                                        + losers.getPlayer().getDisplayName(),
+                                "inventory " + uuid.toString() + " "
+                                        + losers.getPlayer().getUniqueId().toString());
+                    }
+
+                } else {
+
+                    Profile loser = teamOne.get(0);
+
+                    sendClickableMatchMessage(Practice.QUATERNARY_COLOR + " » &cLoser: &f"
+                                    + loser.getPlayer().getDisplayName(),
+                            "inventory " + uuid.toString() + " "
+                                    + loser.getPlayer().getUniqueId().toString());
+                }
+            }
+
+            sendMatchMessage(" ");
+
+            int winnerEloChange = 0;
+            int loserEloChange = 0;
+
+            // match is a normal queue match
+            if (queuedMatch && party == null) {
+
+                Profile winner;
+                Profile loser;
+
+                if (teamOne.isEmpty()) {
+                    winner = teamTwo.get(0);
+                    loser = getOpponents(winner).getAsList().get(0);
+                } else {
+                    winner = teamOne.get(0);
+                    loser = getOpponents(winner).getAsList().get(0);
+                }
+
+                int winnerElo = Practice.get().getLeaderboardManager().getElo(winner.getPlayer().getUniqueId(), ladder);
+                int loserElo = Practice.get().getLeaderboardManager().getElo(loser.getPlayer().getUniqueId(), ladder);
+
+                // update loss for loser and win for winner
+                Practice.get().getLeaderboardManager().updateLeaderboardPlayer(ladder, loser, 0, 1);
+                Practice.get().getLeaderboardManager().updateLeaderboardPlayer(ladder, winner, 1, 0);
+
+                winnerEloChange = Practice.get().getLeaderboardManager().getElo(winner.getPlayer().getUniqueId(), ladder) - winnerElo;
+                loserEloChange = Practice.get().getLeaderboardManager().getElo(loser.getPlayer().getUniqueId(), ladder) - loserElo;
+
+                winner.sendMessage(Practice.QUATERNARY_COLOR + "Your updated elo: "
+                        + Practice.PRIMARY_COLOR + winnerElo + Practice.QUATERNARY_COLOR + ". &a(+"
+                        + winnerEloChange + ")");
+                loser.sendMessage(Practice.QUATERNARY_COLOR + "Your updated elo: "
+                        + Practice.PRIMARY_COLOR + loserElo + Practice.QUATERNARY_COLOR + ". &c("
+                        + loserEloChange + ")");
+
+                sendMatchMessage(" ");
+            }
+        }
+
         // If the match is being forcefully ended (e.g., server restarted/crashed)
         if (forceEnd) {
 
-            // Remove all players from the match
-            for (Profile profile : profileMap.keySet()) {
-                removePlayer(profile);
+            if (matchTask != null) {
+                matchTask.cancel();
             }
 
-            // Reset any blocks placed during the match by setting them to air
-            for (Block block : placedBlocks) {
-                block.setType(Material.AIR);
-            }
-
-            // Mark the arena as open again, allowing it to be used for future matches
-            arena.setOpen(true);
+            destroyMatch();
             return;
         }
 
         // Update match state to "ENDED" and set the duration for the end phase
         matchState = MatchState.ENDED;
-        duration = 4;
+        duration = 5;
 
-        // Reset state for all players in the match
-        for (Profile profile : profileMap.keySet()) {
-            profile.setMatch(null); // Remove the match reference from the player's profile
-            profile.setLastAttacker(null); // Clear the last attacker (if applicable)
-            profile.setLastMatchLadder(ladder); // Record the ladder used in the last match
-            profile.setKnockback(KnockbackModule.getDefault().title); // Reset knockback settings
-            profile.setPlayerState(PlayerState.IN_SPAWN); // Set player state to spawn (they're out of the match)
-
-            // Remove the player from the queue manager's list of players in a match
-            Practice.get().getQueueManager().getPlayersInMatch().remove(profile);
-
-            // If it's not a party match or FFA, give the player the option to play again
-            if (party == null && !ffa && queuedMatch) {
-                profile.getPlayer().getInventory().setItem(0, ItemUtil.getPlayAgainItem());
-            }
-        }
+        teamOne.startEndOfMatch(this);
+        teamTwo.startEndOfMatch(this);
+        teamFFA.startEndOfMatch(this);
 
         // Set up a delayed task to finalize the end of the match
         matchTask = new BukkitRunnable() {
@@ -318,110 +491,106 @@ public class Match {
             public void run() {
                 --duration; // Decrease the duration counter each tick
 
+                if (duration == 2) {
+                    // If it's not a party match or FFA, give the player the option to play again
+                    if (party == null && !ffa && queuedMatch) {
+                        teamOne.getAsList().forEach(profile ->
+                                profile.getPlayer().getInventory().setItem(0, ItemUtil.getPlayAgainItem()));
+                        teamTwo.getAsList().forEach(profile ->
+                                profile.getPlayer().getInventory().setItem(0, ItemUtil.getPlayAgainItem()));
+                    }
+                }
+
                 // Once the duration reaches zero, complete the match ending process
                 if (duration <= 0) {
-
-                    // Remove players who are no longer in the match (in case they were disconnected or teleported)
-                    for (Profile profile : profileMap.keySet()) {
-                        if (!profile.isInMatch()) {
-                            removePlayer(profile);
-                        }
-                    }
-
-                    // Reset any blocks placed during the match (return them to their original state)
-                    for (Block block : placedBlocks) {
-                        block.setType(Material.AIR);
-                    }
-
-                    // Mark the arena as open again for future use
-                    arena.setOpen(true);
-
-                    // Remove the match from the match manager
-                    Practice.get().getMatchManager().removeMatch(Match.this);
-
-                    // Clear the player map (indicating the match is no longer active)
-                    profileMap.clear();
-
-                    // Cancel the task since the match is over
+                    destroyMatch();
                     cancel();
                 }
             }
         }.runTaskTimer(Practice.get(), 0L, 20L); // Schedule this task to run every second (20 ticks)
     }
 
-    /**
-     * Removes a player from the match, resets their state, and teleports them to the main spawn.
-     *
-     * This method handles the following:
-     * - Resets the player's state by clearing any match-related properties.
-     * - Restores the player's inventory to a predefined "spawn" inventory.
-     * - Teleports the player to the main spawn location, effectively removing them from the match.
-     *
-     * @param profile The profile of the player to be removed.
-     */
-    private void removePlayer(Profile profile) {
+    private void destroyMatch(){
 
-        // Reset the player's state (e.g., clear any active match-related effects, attributes)
-        PlayerUtil.resetPlayer(profile.getPlayer());
+        for (Profile spectator : spectators) {
+            teamOne.getAsList().forEach(profile -> profile.show(spectator));
+            teamTwo.getAsList().forEach(profile -> profile.show(spectator));
+            teamFFA.getAsList().forEach(profile -> profile.show(spectator));
+        }
 
-        // Set the player's inventory to the spawn inventory (could be a standard inventory when they leave the match)
-        InventoryUtil.setSpawnInventory(profile.getPlayer());
+        teamOne.deletePlayers();
+        teamTwo.deletePlayers();
+        teamFFA.deletePlayers();
 
-        // Teleport the player to the main spawn location (e.g., out of the match arena)
-        profile.teleport(Practice.get().getConfigManager().getMainSpawn());
+        for (Profile spectator : spectators) {
+            spectator.setSpectatingMatch(null);
+            spectator.reset();
+            spectator.setLobbyInventory();
+            spectator.teleport(Practice.get().getConfigManager().getMainSpawn());
+            spectator.setPlayerState(PlayerState.IN_SPAWN);
+
+
+            // unneccisasry??
+            //for (Profile profile : Practice.get().getProfileManager().getProfileMap().values()) {
+            //    profile.show(spectator);
+            //    spectator.show(profile);
+            //}
+        }
+
+        if (ladder instanceof BridgeLadder || ladder instanceof BedFightLadder) {
+            blockTracker.clear();
+        }
+
+        // Remove any left behind entities from the arena
+        arena.removeEntities();
+
+        // Remove the match from the match manager
+        Practice.get().getMatchManager().removeMatch(Match.this);
     }
 
-    /**
-     * Eliminates a player from the match, updates their status, and broadcasts the elimination event.
-     *
-     * This method handles the logic of eliminating a player from the match, including:
-     * - Updating the player's status in the `profileMap` to reflect that they are no longer alive.
-     * - Broadcasting messages to all players in the match about the player's elimination.
-     * - Checking if the match should end based on the number of remaining players (whether it's a team or Free-For-All match).
-     *
-     * @param profile The profile of the player to be eliminated.
-     */
     public void eliminate(Profile profile) {
 
-        // Get the team number of the eliminated player
-        int teamNumber = profileMap.get(profile).getX();
+        if (!getTeam(profile).isAlive(profile)) {
+            return;
+        }
 
-        // Mark the player as eliminated (alive status set to false)
-        profileMap.put(profile, new Pair<>(teamNumber, false));
+        getTeam(profile).setEliminated(profile);
 
-        // Broadcast message based on the elimination context (whether it was by an attacker or not)
-        if (profile.getLastAttacker() == null) {
-            // If no attacker, simply broadcast the player's death
-            if (profileMap.size() > 2) {
-                sendMatchMessage(" ");
-                sendMatchMessage(Practice.PRIMARY_COLOR + profile.getPlayer().getName()
-                        + Practice.QUATERNARY_COLOR + " died.");
-                sendMatchMessage(" ");
-            } else {
-                // If only 2 players are left, broadcast who killed the eliminated player
-                sendMatchMessage(" ");
+        arena.getWorld().strikeLightningEffect(profile.getPlayer().getLocation());
+        profile.getPlayer().setVelocity(profile.getPlayer().getVelocity().multiply(2.15).setY(0.6).normalize());
+
+        // Take a snapshot of the inventory before we reset it.
+        matchInventories.getInventories().put(profile.getPlayer().getUniqueId(), new InventorySnapshot(profile));
+
+        if (!(ladder instanceof BedFightLadder) && !(ladder instanceof BridgeLadder)) {
+
+            // Broadcast message based on the elimination context (whether it was by an attacker or not)
+            if (profile.getLastAttacker() == null) {
                 sendMatchMessage(Practice.PRIMARY_COLOR + profile.getPlayer().getName()
                         + Practice.QUATERNARY_COLOR + " was killed by "
-                        + Practice.PRIMARY_COLOR + getOpponentList(profile).get(0).getPlayer().getName()
+                        + Practice.PRIMARY_COLOR
+                        + getOpponents(profile).getAsList().get(0).getPlayer().getName()
                         + Practice.QUATERNARY_COLOR + ".");
-                sendMatchMessage(" ");
+            } else {
+                // If the player was killed by another player, broadcast the name of the attacker
+                sendMatchMessage(Practice.PRIMARY_COLOR + profile.getPlayer().getName()
+                        + Practice.QUATERNARY_COLOR + " was killed by "
+                        + Practice.PRIMARY_COLOR + profile.getLastAttacker().getPlayer().getName()
+                        + Practice.QUATERNARY_COLOR + ".");
             }
-        } else {
-            // If the player was killed by another player, broadcast the name of the attacker
-            sendMatchMessage(" ");
-            sendMatchMessage(Practice.PRIMARY_COLOR + profile.getPlayer().getName()
-                    + Practice.QUATERNARY_COLOR + " was killed by "
-                    + Practice.PRIMARY_COLOR + profile.getLastAttacker().getPlayer().getName()
-                    + Practice.QUATERNARY_COLOR + ".");
-            sendMatchMessage(" ");
+        }
+
+        if (!profile.getPlayer().isDead()) {
+            // Eliminated player becomes a spectator of the match
+            addSpectator(profile);
         }
 
         // If the match is not Free-For-All (FFA), check team elimination conditions
         if (!ffa) {
 
             // Get the list of alive players for each team
-            List<Profile> teamOne = getAliveFromTeam(1);
-            List<Profile> teamTwo = getAliveFromTeam(2);
+            List<Profile> teamOne = this.teamOne.getAliveList();
+            List<Profile> teamTwo = this.teamTwo.getAliveList();
 
             // Team one lost, and team two won
             if (teamOne.isEmpty() && !teamTwo.isEmpty()) {
@@ -437,7 +606,7 @@ public class Match {
             }
         } else {
             // If the match is Free-For-All (FFA), check if only one player remains
-            List<Profile> ffa = getAliveFromTeam(0);
+            List<Profile> ffa = teamFFA.getAliveList();
 
             // If only one player is left, the match ends
             if (ffa.size() == 1) {
@@ -446,225 +615,178 @@ public class Match {
         }
     }
 
-    /**
-     * Sets up the player's state for the match.
-     *
-     * @param profile    The profile of the player to be set up.
-     * @param teamNumber The team number the player is assigned to (0 for spectate, 1 or 2 for teams).
-     */
-    private void setupPlayer(Profile profile, int teamNumber) {
+    public void addSpectator(Profile profile){
+        spectators.add(profile);
 
-        profile.getDuelRequests().clearRequests();
+        // show other spectators to new spectator
+        for (Profile otherSpectators : spectators) {
+            profile.show(otherSpectators);
+        }
 
-        profile.setMatch(this);
-        profile.setPlayerState(PlayerState.IN_MATCH);
-        profile.setHits(0);
+        // hide spectator from alive players
+        teamOne.hideFromTeam(profile);
+        teamTwo.hideFromTeam(profile);
+        teamFFA.hideFromTeam(profile);
+
+        profile.getPlayer().setGameMode(GameMode.CREATIVE);
+
+        if (!profile.getPlayer().getAllowFlight()) {
+            profile.getPlayer().setAllowFlight(true);
+        }
+
+        if (!profile.getPlayer().isFlying()) {
+            profile.getPlayer().setFlying(true);
+        }
+
+        profile.setSpectatingMatch(this);
+        profile.setPlayerState(PlayerState.SPECTATING_MATCH);
+        profile.teleport(arena.getSpectate());
+
+        profile.reset();
+        profile.setSpectateMatchInventory();
+    }
+
+    public void removeSpectator(Profile profile){
+
+        if (!spectators.contains(profile)){
+            return;
+        }
+
+        spectators.remove(profile);
+
+
+        teamOne.getAsList().forEach(members -> members.show(profile));
+        teamTwo.getAsList().forEach(members -> members.show(profile));
+        teamFFA.getAsList().forEach(members -> members.show(profile));
+
+        // Show all players to old-spectator and show old-spectator to all players
+        //for (Profile players : Practice.get().getProfileManager().getProfileMap().values()) {
+        //    players.show(profile);
+        //    profile.show(players);
+        //}
+
+        profile.getPlayer().setGameMode(GameMode.SURVIVAL);
+
+        profile.setPlayerState(PlayerState.IN_SPAWN);
+        profile.teleport(Practice.get().getConfigManager().getMainSpawn());
+
+        profile.reset();
+        profile.setLobbyInventory();
+    }
+
+    public void handleBedFightRespawn(Profile profile){
+
+        getOpponents(profile).sendSound(Sound.ORB_PICKUP);
+
+        profile.teleport(arena.getSpectate());
+
+        if (!getTeam(profile).isHasBed()) {
+            eliminate(profile);
+            return;
+        }
+
         profile.setLastAttacker(null);
-        profile.setLadderQueued(null);
-        PlayerUtil.resetPlayer(profile.getPlayer());
 
-        // Teleports the player to the appropriate location based on the team number.
-        // If teamNumber is 0, teleport to the spectating position.
-        // If teamNumber is 1, teleport to the position for team 1.
-        // If teamNumber is 2, teleport to the position for team 2.
-        profile.teleport(teamNumber == 0 ? arena.getSpectate() : teamNumber == 1
-                ? arena.getPosition1() : arena.getPosition2());
+        profile.setRespawnTimer(3);
 
-        ladder.giveBookKits(profile);
+        profile.reset();
+        profile.getPlayer().setGameMode(GameMode.SPECTATOR);
+        profile.getPlayer().setAllowFlight(true);
+        profile.getPlayer().setFlying(true);
+
+        new BukkitRunnable(){
+            @Override
+            public void run(){
+
+                if (!getTeam(profile).getAliveList().contains(profile)
+                        || !profile.getPlayer().isOnline()) {
+                    cancel();
+                    return;
+                }
+
+                if (profile.getRespawnTimer() > 0) {
+                    profile.sendTitle("&c&lYOU DIED", Practice.QUATERNARY_COLOR
+                            + "Respawning in " + Practice.PRIMARY_COLOR + profile.getRespawnTimer()
+                            + Practice.QUATERNARY_COLOR + " seconds...", 5, 10, 5);
+                }
+
+                if (profile.getRespawnTimer() <= 0) {
+
+                    if (teamOne.isInTeam(profile)) {
+                        profile.teleport(arena.getPosition1());
+                    } else {
+                        profile.teleport(arena.getPosition2());
+                    }
+
+                    if (profile.getPlayer().isFlying()) {
+                        profile.getPlayer().setFlying(false);
+                    }
+
+                    if (profile.getPlayer().getAllowFlight()) {
+                        profile.getPlayer().setAllowFlight(false);
+                    }
+
+                    profile.getPlayer().setGameMode(GameMode.SURVIVAL);
+                    profile.reset();
+                    ladder.giveKit(profile);
+
+                    // clear old title
+                    profile.sendTitle("&c", 5, 10, 5);
+
+                    cancel();
+                    return;
+                }
+
+                profile.setRespawnTimer(profile.getRespawnTimer() - 1);
+            }
+        }.runTaskTimer(Practice.get(), 0L, 20L);
     }
 
-    /**
-     * Sends a message to all participants in the match.
-     *
-     * @param message The message to be sent to all players in the match.
-     */
+    public void sendClickableMatchMessage(String message, String command){
+        teamOne.sendClickableMessage(message, command);
+        teamTwo.sendClickableMessage(message, command);
+        teamFFA.sendClickableMessage(message, command);
+    }
+
     public void sendMatchMessage(String message) {
-        for (Profile profile : profileMap.keySet()) {
-            profile.sendMessage(message);
-        }
+        teamOne.sendMessage(message);
+        teamTwo.sendMessage(message);
+        teamFFA.sendMessage(message);
     }
 
-    /**
-     * Sends a title message to all profiles in the match.
-     * <p>
-     * This method sends a title (or subtitle) message to all players (profiles) in the match.
-     * The title appears for a brief period (0-1-0 timing), which is typically used to display
-     * match-related messages such as announcements or alerts to all players in the match.
-     *
-     * @param message The title message to be sent to all players in the match.
-     */
     public void sendMatchTitle(String message) {
-        for (Profile profile : profileMap.keySet()) {
-            profile.sendTitle(message, 0, 1, 0);
-        }
+        teamOne.sendTitle(message);
+        teamTwo.sendTitle(message);
+        teamFFA.sendTitle(message);
     }
 
-    /**
-     * Plays a sound for all profiles in the match.
-     * <p>
-     * This method plays a specified sound at the location of each player (profile) in the match.
-     * It ensures all players hear the same sound at the same time, which can be used for match-related events,
-     * such as starting a match, announcing a round win, etc.
-     *
-     * @param sound The sound to be played for all players in the match.
-     */
+    public void sendMatchTitle(String message, String subMessage) {
+        teamOne.sendTitle(message, subMessage);
+        teamTwo.sendTitle(message, subMessage);
+        teamFFA.sendTitle(message, subMessage);
+    }
+
     public void playMatchSound(Sound sound) {
-        for (Profile profile : profileMap.keySet()) {
-            profile.getPlayer().playSound(profile.getPlayer().getLocation(), sound, 1, 1);
-        }
+        teamOne.sendSound(sound);
+        teamTwo.sendSound(sound);
+        teamFFA.sendSound(sound);
     }
 
-    /**
-     * Retrieves a list of opponents for a given profile in a match.
-     * <p>
-     * Depending on the team the provided profile is in, this method will:
-     * - For team '1', it will add all profiles from team '2' to the opponent list.
-     * - For team '2', it will add all profiles from team '1' to the opponent list.
-     * - For Free-For-All (FFA) mode, it will add all other players to the opponent list (excluding the provided profile).
-     *
-     * @param profile The profile of the player whose opponents are being queried.
-     * @return A list of profiles representing the player's opponents in the match.
-     */
-    public List<Profile> getOpponentList(Profile profile) {
-        List<Profile> opponents = new ArrayList<>();
-
-        int team = profileMap.get(profile).getX();
-
-        // If FFA mode or team-based match, process accordingly.
-        if (team == 0) { // FFA
-            for (Profile p : profileMap.keySet()) {
-                if (p != profile) { // Skip the player itself
-                    opponents.add(p);
-                }
-            }
-        } else { // Teams 1 or 2
-            int opponentTeam = (team == 1) ? 2 : 1; // Opposing team
-            for (Map.Entry<Profile, Pair<Integer, Boolean>> entry : profileMap.entrySet()) {
-                if (entry.getValue().getX() == opponentTeam) {
-                    opponents.add(entry.getKey());
-                }
-            }
-        }
-
-        return opponents;
+    public MatchTeam getTeam(Profile profile){
+        if (teamOne.isInTeam(profile))
+            return teamOne;
+        if (teamTwo.isInTeam(profile))
+            return teamTwo;
+        return teamFFA;
     }
 
-    /**
-     * Retrieves a list of alive opponents for a given profile.
-     * <p>
-     * This method filters out the players who are considered alive (based on the `y` value in the `profileMap`).
-     * It will only include players who are alive and are in the opponent team.
-     *
-     * @param profile The profile of the player whose opponents are being retrieved.
-     * @return A list of profiles representing the alive opponents of the player.
-     */
-    public List<Profile> getAliveOpponentList(Profile profile) {
-        List<Profile> opponents = new ArrayList<>();
-        // Iterate through all the player's opponents
-        for (Profile players : getOpponentList(profile)) {
-            // Check if the opponent is alive (y == true)
-            if (profileMap.get(players).getY()) {
-                opponents.add(players);
-            }
+    public MatchTeam getOpponents(Profile profile){
+        if (teamOne.isInTeam(profile)) {
+            return teamTwo;
         }
-        return opponents;
-    }
-
-    /**
-     * Retrieves a list of alive players from a specific team.
-     * <p>
-     * This method iterates through the `profileMap` and checks for players in the given team
-     * who are alive (based on the `y` value in the `profileMap`).
-     *
-     * @param teamNumber The team number to retrieve players from (e.g., 1 or 2).
-     * @return A list of profiles representing the alive players in the specified team.
-     */
-    public List<Profile> getAliveFromTeam(int teamNumber) {
-        List<Profile> alive = new ArrayList<>();
-        // Iterate through all players and check if they belong to the specified team and are alive
-        for (Map.Entry<Profile, Pair<Integer, Boolean>> entry : profileMap.entrySet()) {
-            if (entry.getValue().getX() == teamNumber && entry.getValue().getY()) {
-                alive.add(entry.getKey());
-            }
+        if (teamTwo.isInTeam(profile)) {
+            return teamOne;
         }
-        return alive;
-    }
-
-    /**
-     * Retrieves the team of a specific player.
-     * <p>
-     * This method finds all players in the same team as the given profile by checking the team number
-     * (based on the `x` value in the `profileMap`).
-     *
-     * @param profile The profile of the player whose team is being retrieved.
-     * @return A list of profiles representing the players in the same team as the given player.
-     */
-    public List<Profile> getPlayerTeam(Profile profile) {
-        List<Profile> team = new ArrayList<>();
-        // Get the team number for the given player
-        int teamNumber = profileMap.get(profile).getX();
-        // Iterate through all players and add those who belong to the same team
-        for (Map.Entry<Profile, Pair<Integer, Boolean>> entry : profileMap.entrySet()) {
-            if (entry.getValue().getX() == teamNumber) {
-                team.add(entry.getKey());
-            }
-        }
-        return team;
-    }
-
-    /**
-     * Retrieves the list of alive players from the same team as the given player.
-     * <p>
-     * This method filters out the players who are in the same team as the given profile and checks if they are alive.
-     * It uses the team number and the alive status (y value) to determine the result.
-     *
-     * @param profile The profile of the player whose team's alive players are being retrieved.
-     * @return A list of profiles representing the alive players in the same team as the given player.
-     */
-    public List<Profile> getAliveFromPlayerTeam(Profile profile) {
-        List<Profile> team = new ArrayList<>();
-        // Get the team number for the given player
-        int teamNumber = profileMap.get(profile).getX();
-        // Iterate through all players, checking for those who are on the same team and are alive
-        for (Map.Entry<Profile, Pair<Integer, Boolean>> entry : profileMap.entrySet()) {
-            if (entry.getValue().getX() == teamNumber && entry.getValue().getY()) {
-                team.add(entry.getKey());
-            }
-        }
-        return team;
-    }
-
-    /**
-     * Checks if a given player is part of team 1.
-     * <p>
-     * This method verifies if the profile belongs to team 1 by checking the `profileMap` entry
-     * and comparing the team number (x value).
-     *
-     * @param profile The profile of the player to check.
-     * @return `true` if the player is on team 1, `false` otherwise.
-     */
-    public boolean isTeamOne(Profile profile) {
-        // Check if the profile exists in the profileMap before verifying the team number
-        if (profileMap.containsKey(profile)) {
-            return profileMap.get(profile).getX() == 1;
-        }
-        return false;
-    }
-
-    /**
-     * Checks if a given player is part of team 2.
-     * <p>
-     * This method verifies if the profile belongs to team 2 by checking the `profileMap` entry
-     * and comparing the team number (x value).
-     *
-     * @param profile The profile of the player to check.
-     * @return `true` if the player is on team 2, `false` otherwise.
-     */
-    public boolean isTeamTwo(Profile profile) {
-        // Check if the profile exists in the profileMap before verifying the team number
-        if (profileMap.containsKey(profile)) {
-            return profileMap.get(profile).getX() == 2;
-        }
-        return false;
+        return teamFFA;
     }
 }

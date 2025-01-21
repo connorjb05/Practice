@@ -4,6 +4,7 @@ import net.syphlex.practice.manager.profile.Profile;
 
 public enum Permissions {
     SET_SPAWN("syphlex.setspawn"),
+    ADMIN("syphlex.admin"),
     BUILD("syphlex.build"),
     ARENA("syphlex.arena"),
     OPEN_PARTY("syphlex.open.party"),

@@ -2,18 +2,16 @@ package net.syphlex.practice.listener;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
-import net.syphlex.practice.event.ProfileDamageEvent;
-import net.syphlex.practice.manager.ladder.impl.BoxingLadder;
-import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
-import net.syphlex.practice.manager.ladder.impl.SoupLadder;
-import net.syphlex.practice.manager.ladder.impl.SumoLadder;
+import net.syphlex.practice.manager.arena.Arena;
+import net.syphlex.practice.manager.ladder.impl.*;
 import net.syphlex.practice.manager.match.MatchState;
 import net.syphlex.practice.manager.menu.impl.bot.BotMatchMenu;
 import net.syphlex.practice.manager.menu.impl.LeaderboardsMenu;
 import net.syphlex.practice.manager.menu.impl.kiteditor.KitEditorSelectionMenu;
 import net.syphlex.practice.manager.menu.impl.party.FightOtherPartyMenu;
 import net.syphlex.practice.manager.menu.impl.party.PartyMatchMenu;
-import net.syphlex.practice.manager.menu.impl.SettingsMenu;
+import net.syphlex.practice.manager.menu.impl.settings.ProfileSettingsMenu;
+import net.syphlex.practice.manager.menu.impl.settings.SettingsMenu;
 import net.syphlex.practice.manager.party.Party;
 import net.syphlex.practice.manager.profile.objects.PlayerState;
 import net.syphlex.practice.manager.profile.Profile;
@@ -22,7 +20,6 @@ import net.syphlex.practice.util.Messages;
 import net.syphlex.practice.util.Permissions;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -32,6 +29,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 import java.text.DecimalFormat;
 
@@ -60,6 +58,46 @@ public class PlayerListener implements Listener {
 
         final Player p = e.getPlayer();
         final Profile profile = Practice.get().getProfileManager().get(p);
+
+        if (profile.getRenamingArena() != null) {
+            e.setCancelled(true);
+
+            if (e.getMessage().equalsIgnoreCase("cancel")) {
+                profile.sendMessage("&cYou are no longer renaming this arena.");
+                profile.setRenamingArena(null);
+                return;
+            }
+
+            final String newName = e.getMessage().split(" ")[0];
+
+            boolean invalid = false;
+
+            for (String existingNames : Practice.get().getArenaManager().getArenaMap().keySet()) {
+                if (existingNames.equals(newName)) {
+                    invalid = true;
+                    break;
+                }
+            }
+
+            if (invalid) {
+                profile.sendMessage("&cThat arena name already exists.");
+                profile.setRenamingArena(null);
+                return;
+            }
+
+            Practice.get().getArenaManager().getArenaMap().remove(profile.getRenamingArena().getName());
+
+            profile.sendMessage("&aYou have changed the arena name to "
+                    + newName + "&a.");
+
+            Arena arenaData = profile.getRenamingArena();
+            arenaData.setName(newName);
+
+            Practice.get().getArenaManager().getArenaMap().put(newName, arenaData);
+
+            profile.setRenamingArena(null);
+            return;
+        }
 
         if (profile.isPartyChat()) {
 
@@ -112,6 +150,12 @@ public class PlayerListener implements Listener {
                 e.setCancelled(true);
             }
 
+            if (profile.isInMatch()) {
+                if (profile.getMatch().getMatchState() == MatchState.ENDED) {
+                    e.setCancelled(true);
+                }
+            }
+
             return;
         }
 
@@ -144,7 +188,14 @@ public class PlayerListener implements Listener {
 
         if (profile.isInMatch()) {
 
-            if (profile.getMatch().getLadder() instanceof BridgeLadder) {
+            if (e.getItemDrop().getItemStack().getType() == Material.GLASS_BOTTLE) {
+                e.getItemDrop().remove();
+                return;
+            }
+
+            if (profile.getMatch().getLadder() instanceof BridgeLadder
+                    || profile.getMatch().getLadder() instanceof BowLadder
+                    || profile.getMatch().getLadder() instanceof BoxingLadder) {
                 e.setCancelled(true);
                 return;
             }
@@ -170,11 +221,17 @@ public class PlayerListener implements Listener {
         final Player p = e.getPlayer();
         final Profile profile = Practice.get().getProfileManager().get(p);
 
-        if (profile.hasPermission("syphlex.admin")) {
+        if (profile.hasPermission(Permissions.ADMIN)) {
             return;
         }
 
         if (profile.isInMatch()) {
+
+            if (e.getMessage().split(" ")[0].equalsIgnoreCase("/leave")
+                    || e.getMessage().split(" ")[0].equalsIgnoreCase("/spawn")) {
+                return;
+            }
+
             e.setCancelled(true);
             profile.sendMessage("&cYou cannot issue commands while in a match.");
         }
@@ -212,64 +269,6 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityDamageEvent(EntityDamageEvent e) {
-
-        if (!(e.getEntity() instanceof Player)) {
-            return;
-        }
-
-        final Player p = (Player) e.getEntity();
-        final Profile profile = Practice.get().getProfileManager().get(p);
-
-        ProfileDamageEvent profileDamageEvent = new ProfileDamageEvent(
-                null, profile, e.getCause(), e.getDamage(), e.getFinalDamage());
-        Bukkit.getPluginManager().callEvent(profileDamageEvent);
-
-        if (profileDamageEvent.isCancelled()) {
-            e.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e) {
-
-        if (!(e.getEntity() instanceof Player)) {
-            return;
-        }
-
-        Player damager = null;
-
-        if (e.getDamager() instanceof Projectile) {
-            if (((Projectile) e.getDamager()).getShooter() instanceof Player) {
-                damager = (Player) ((Projectile) e.getDamager()).getShooter();
-            }
-        }
-
-        if (e.getDamager() instanceof Player) {
-            damager = (Player) e.getDamager();
-        }
-
-        // dont know da fuq where this damage came from cuh
-        if (damager == null) {
-            return;
-        }
-
-        final Player player = (Player) e.getEntity();
-        final Profile profile = Practice.get().getProfileManager().get(player);
-        final Profile damagerProfile = Practice.get().getProfileManager().get(damager);
-
-        ProfileDamageEvent profileDamageEvent = new ProfileDamageEvent(
-                damagerProfile,
-                profile, e.getCause(), e.getDamage(), e.getFinalDamage());
-
-        Bukkit.getPluginManager().callEvent(profileDamageEvent);
-
-        if (profileDamageEvent.isCancelled()) {
-            e.setCancelled(true);
-        }
-    }
-
-    @EventHandler
     public void onPlayerInteractEvent(PlayerInteractEvent e) {
 
         final Player p = e.getPlayer();
@@ -289,6 +288,11 @@ public class PlayerListener implements Listener {
                     e.setCancelled(true);
 
                     final ItemStack item = p.getItemInHand();
+
+                    if (item.getType() == Material.POTION) {
+                        e.setCancelled(false);
+                        return;
+                    }
 
                     if (item.isSimilar(ItemUtil.getQueueMatchItem())) {
 
@@ -336,7 +340,13 @@ public class PlayerListener implements Listener {
 
                         // settings
 
-                        profile.openMenu(new SettingsMenu(profile));
+                        if (profile.isInParty()) {
+                            if (profile.getParty().isLeader(profile)) {
+                                profile.openMenu(new SettingsMenu());
+                            }
+                        } else {
+                            profile.openMenu(new ProfileSettingsMenu(profile));
+                        }
 
                     } else if (item.isSimilar(ItemUtil.getPartyMatchItem())) {
 
@@ -386,13 +396,45 @@ public class PlayerListener implements Listener {
                         Practice.get().getQueueManager().dequeue(profile);
                     }
 
+                    p.updateInventory();
+                    break;
+                case LEFT_CLICK_AIR:
+                case LEFT_CLICK_BLOCK:
+                    p.updateInventory();
                     break;
             }
-        } else if (profile.getPlayerState() == PlayerState.IN_MATCH) {
+        } else if (profile.getPlayerState() == PlayerState.SPECTATING_MATCH) {
+
+            e.setCancelled(true);
+
             switch (a) {
                 case RIGHT_CLICK_AIR:
                 case RIGHT_CLICK_BLOCK:
 
+                    final ItemStack item = p.getItemInHand();
+
+                    if (item.isSimilar(ItemUtil.getLeaveMatchSpectateItem())) {
+
+                        // leave spectate
+
+                        if (!profile.isSpectatingMatch()) {
+                            profile.sendMessage("&cThere was an error while attempting this, please reconnect.");
+                            return;
+                        }
+
+                        profile.stopSpectatingMatch();
+                    }
+
+                    break;
+            }
+
+            e.setCancelled(true);
+            p.updateInventory();
+
+        } else if (profile.getPlayerState() == PlayerState.IN_MATCH) {
+            switch (a) {
+                case RIGHT_CLICK_AIR:
+                case RIGHT_CLICK_BLOCK:
 
                     if (e.getItem() != null && e.getItem().getType() == Material.ENDER_PEARL) {
 

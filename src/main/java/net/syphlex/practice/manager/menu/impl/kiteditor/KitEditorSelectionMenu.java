@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class KitEditorSelectionMenu extends Menu {
     public KitEditorSelectionMenu() {
-        super("Select a Kit", 36);
+        super("Select a Ladder", 36);
 
 
         for (int i = 0; i < size; i++) {

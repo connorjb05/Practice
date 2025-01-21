@@ -21,7 +21,7 @@ public class ArenaManager {
     private FileConfiguration config;
 
     @Getter
-    private final Map<String, Arena> arenaMap = new HashMap<>();
+    private final Map<String, Arena> arenaMap = new TreeMap<>();
 
     public void onEnable() {
         try {
@@ -69,6 +69,14 @@ public class ArenaManager {
             if (!file.exists()) {
                 file.createNewFile();
                 return;
+            }
+
+            Set<String> arenasInConfig = config.getKeys(false);
+
+            for (String configArena : arenasInConfig) {
+                if (!arenaMap.containsKey(configArena)) {
+                    config.set(configArena, null);
+                }
             }
 
             for (Arena arena : arenaMap.values()) {

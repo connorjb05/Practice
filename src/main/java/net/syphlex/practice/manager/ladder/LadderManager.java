@@ -19,9 +19,9 @@ public class LadderManager {
         ladderMap.put("Bridge", new BridgeLadder("Bridge"));
         ladderMap.put("Combo", new ComboLadder("Combo"));
         ladderMap.put("Bow", new BowLadder("Bow"));
+        ladderMap.put("OneTap", new OneTapLadder("One Tap"));
         ladderMap.put("Soup", new SoupLadder("Soup"));
-        ladderMap.put("BuildUHC", new BuildUHCLadder("Build UHC"));
-        ladderMap.put("Gapple", new GappleLadder("Gapple"));
+        //ladderMap.put("Gapple", new GappleLadder("Gapple"));
     }
 
     public boolean kitExists(String kitName){

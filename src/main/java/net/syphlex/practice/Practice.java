@@ -4,7 +4,7 @@ import lombok.Getter;
 import net.syphlex.practice.command.*;
 import net.syphlex.practice.listener.*;
 import net.syphlex.practice.manager.arena.ArenaManager;
-import net.syphlex.practice.manager.arena.ChunkManager;
+import net.syphlex.practice.manager.arena.chunk.ChunkManager;
 import net.syphlex.practice.manager.config.ConfigManager;
 import net.syphlex.practice.manager.event.EventManager;
 import net.syphlex.practice.manager.ladder.LadderManager;
@@ -17,7 +17,6 @@ import net.syphlex.practice.manager.queue.QueueManager;
 import net.syphlex.practice.manager.scoreboard.ScoreboardManager;
 import net.syphlex.practice.command.ArenaCmd;
 import net.syphlex.practice.command.PartyCmd;
-import net.syphlex.practice.command.SetMainSpawnCmd;
 import net.syphlex.practice.listener.PlayerListener;
 import net.syphlex.practice.manager.system.ThreadManager;
 import org.bukkit.Bukkit;
@@ -61,7 +60,7 @@ public class Practice extends JavaPlugin {
         ladderManager.onEnable();
         profileManager.onEnable();
         arenaManager.onEnable();
-        chunkManager.onEnable();
+        //chunkManager.onEnable();
         matchManager.onEnable();
         queueManager.onEnable();
         eventManager.onEnable();
@@ -71,8 +70,9 @@ public class Practice extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         Bukkit.getPluginManager().registerEvents(new MatchListener(), this);
         Bukkit.getPluginManager().registerEvents(new WorldListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PotionListener(), this);
 
-        new SetMainSpawnCmd("setspawn");
+        new PracticeCmd("practice");
         new ArenaCmd("arena");
         new PartyCmd("party");
         new SpectateCmd("spectate");
@@ -80,6 +80,7 @@ public class Practice extends JavaPlugin {
         new BuildCmd("build");
         new DuelCmd("duel");
         new EventCmd("event");
+        new InventoryCmd("inventory");
     }
 
     @Override

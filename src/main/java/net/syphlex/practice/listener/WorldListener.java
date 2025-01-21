@@ -21,27 +21,17 @@ import org.bukkit.event.world.WorldLoadEvent;
 
 public class WorldListener implements Listener {
 
+    /*
+
+    This seems to have people get stuck in the floor when they teleport
+
     @EventHandler
-    public void onEntityRegainHealthEvent(EntityRegainHealthEvent e) {
-
-        if (!(e.getEntity() instanceof Player)) {
-            return;
-        }
-
-        final Player player = (Player) e.getEntity();
-
-        if (e.getRegainReason() == EntityRegainHealthEvent.RegainReason.SATIATED
-                || e.getRegainReason() == EntityRegainHealthEvent.RegainReason.MAGIC) {
-
-            final Profile profile = Practice.get().getProfileManager().get(player);
-
-            if (profile.isInMatch()) {
-                if (profile.getMatch().getLadder() instanceof BridgeLadder) {
-                    e.setCancelled(true);
-                }
-            }
+    public void onChunkUnloadEvent(ChunkUnloadEvent e){
+        if (Practice.get().getChunkManager().getChunks().contains(e.getChunk())) {
+            //e.setCancelled(true);
         }
     }
+     */
 
     @EventHandler
     public void onCreatureSpawnEvent(CreatureSpawnEvent event) {

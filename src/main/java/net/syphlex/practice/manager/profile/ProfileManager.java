@@ -4,9 +4,7 @@ import lombok.Getter;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.profile.objects.PlayerSettings;
-import net.syphlex.practice.util.InventoryUtil;
 import net.syphlex.practice.util.ItemUtil;
-import net.syphlex.practice.util.PlayerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -40,9 +38,9 @@ public class ProfileManager {
         Profile profile = new Profile(player);
         profileMap.put(player.getUniqueId(), profile);
 
-        PlayerUtil.resetPlayer(player);
+        profile.reset();
+        profile.setLobbyInventory();
         profile.teleport(Practice.get().getConfigManager().getMainSpawn());
-        InventoryUtil.setSpawnInventory(player);
 
         Practice.get().getThreadManager().getService().execute(() -> {
 

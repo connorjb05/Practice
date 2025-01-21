@@ -20,7 +20,7 @@ import java.util.List;
 
 public class PartySplitMenu extends Menu {
     public PartySplitMenu() {
-        super("Party Split Match", 27);
+        super("Party Split Match", 36);
 
         for (int i = 0; i < size; i++) {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15));
@@ -31,7 +31,7 @@ public class PartySplitMenu extends Menu {
 
             if (ladder.menuIcon != null) {
 
-                ItemStack itemStack = ladder.menuIcon;
+                ItemStack itemStack = ladder.menuIcon.clone();
                 ItemMeta itemMeta = itemStack.getItemMeta();
 
                 itemMeta.addItemFlags(ItemFlag.values());
@@ -43,6 +43,8 @@ public class PartySplitMenu extends Menu {
 
                 itemMeta.setLore(StringUtil.CC(lore));
                 itemStack.setItemMeta(itemMeta);
+
+                itemStack.setAmount(1);
 
                 inventory.setItem(slot, itemStack);
             }

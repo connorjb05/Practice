@@ -4,7 +4,6 @@ import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
-import net.syphlex.practice.util.InventoryUtil;
 import net.syphlex.practice.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -19,7 +18,7 @@ public class KitEditorMenu extends Menu {
     private final Ladder ladder;
 
     public KitEditorMenu(Ladder ladder) {
-        super("Layout Editor: " + ladder.getName(), 27);
+        super("Layout Editor: " + ladder.getName(), 36);
 
         this.ladder = ladder;
 
@@ -62,7 +61,7 @@ public class KitEditorMenu extends Menu {
 
     @Override
     public void onCloseEvent(Profile profile){
-        InventoryUtil.setSpawnInventory(profile.getPlayer());
+        profile.setLobbyInventory();
     }
 
     @Override
@@ -78,7 +77,7 @@ public class KitEditorMenu extends Menu {
                     profile.saveKitPreset(ladder, profile.getPlayer().getInventory().getContents());
                     //profile.getKitPresets().put(kit, profile.getPlayer().getInventory().getContents());
                     profile.sendMessage("&aSaved your " + ladder.getName() + " kit layout.");
-                    profile.sendMessage("&7You may close out of the menu.");
+                    profile.getPlayer().closeInventory();
                     break;
                 case 13:
                     profile.getPlayer().getInventory().setContents(ladder.getInventory());

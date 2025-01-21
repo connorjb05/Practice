@@ -4,8 +4,7 @@ version: 1.0.0
 main: net.syphlex.practice.Practice
 
 commands:
-  test:
-  setspawn:
+  practice:
   arena:
     aliases: [map]
   party:
@@ -13,8 +12,10 @@ commands:
   spectate:
     aliases: [spec]
   spawn:
+    aliases: [leave]
   build:
   duel:
     aliases: [d]
   event:
     aliases: [e, tournament, tournaments, events]
+  inventory:

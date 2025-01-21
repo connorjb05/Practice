@@ -5,7 +5,12 @@ import com.ngxdev.knockback.KnockbackProfile;
 import fr.mrmicky.fastboard.FastBoard;
 import lombok.Getter;
 import lombok.Setter;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_8_R3.*;
+import net.syphlex.practice.manager.arena.Arena;
+import net.syphlex.practice.manager.match.MatchInventories;
+import net.syphlex.practice.manager.match.team.MatchTeam;
 import org.bukkit.inventory.ItemStack;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.ladder.Ladder;
@@ -20,9 +25,11 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Setter
 @Getter
@@ -34,6 +41,8 @@ public class Profile {
 
     private final Map<Party, Long> partyInvitations = new HashMap<>();
     private final Map<Ladder, ItemStack[]> kitPresets = new HashMap<>();
+
+    private final TtlHashMap<UUID, MatchInventories> postMatchInventories = new TtlHashMap<>(TimeUnit.MINUTES, 2);
 
     private final DuelRequests duelRequests = new DuelRequests();
 
@@ -53,13 +62,15 @@ public class Profile {
 
     private Party party = null;
 
-    private int hits;
+    private int hits, combo, longestCombo, missedPotions, UnmissedPotions, swings, respawnTimer = 0;
 
     private boolean partyChat = false, build = false;
 
+    private Arena renamingArena = null;
+
     private Profile lastAttacker = null;
 
-    private long enderpearlCooldown = -1, lastPearlUseTime = -1;
+    private long enderpearlCooldown = -1, lastPearlUseTime = -1, lastMatchTimeEnded;
 
     public Profile(final Player player) {
         this.player = player;
@@ -67,6 +78,145 @@ public class Profile {
 
         scoreboard = new FastBoard(player);
         scoreboard.updateTitle(StringUtil.CC(Practice.PRIMARY_COLOR + "&lSyphlex &7❘ &fPractice"));
+    }
+
+    public MatchTeam getMatchTeam(){
+
+        if (!isInMatch()) {
+            return null;
+        }
+
+        return match.getTeam(this);
+    }
+
+    public void setSpectateMatchInventory(){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+        player.getInventory().setItem(8, ItemUtil.getLeaveMatchSpectateItem());
+        player.updateInventory();
+    }
+
+    public void setLobbyInventory(){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        if (isInQueue()) {
+            setQueueInventory();
+            return;
+        }
+
+        if (isInParty()) {
+            setPartyInventory();
+            return;
+        }
+
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+
+        player.getInventory().setItem(0, ItemUtil.getQueueMatchItem());
+        player.getInventory().setItem(3, ItemUtil.getEventHostItem());
+        player.getInventory().setItem(5, ItemUtil.getCreatePartyItem());
+        player.getInventory().setItem(6, ItemUtil.getLayoutEditorItem());
+        player.getInventory().setItem(7, ItemUtil.getSettingsItem());
+        player.getInventory().setItem(8, ItemUtil.getLeaderboardsItem());
+        player.updateInventory();
+    }
+
+    public void setPartyInventory(){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+
+        if (party.isLeader(this)) {
+            player.getInventory().setItem(0, ItemUtil.getPartyMatchItem());
+            player.getInventory().setItem(1, ItemUtil.getPartyFightOtherPartyItem());
+        }
+        player.getInventory().setItem(4, ItemUtil.getPartyMemberListItem());
+        player.getInventory().setItem(7, ItemUtil.getSettingsItem());
+        player.getInventory().setItem(8, ItemUtil.getLeavePartyItem());
+
+        player.updateInventory();
+    }
+
+    public void setQueueInventory(){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+        player.getInventory().setItem(8, ItemUtil.getLeaveQueueItem());
+        player.updateInventory();
+    }
+
+    public void reset(){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        player.setGameMode(GameMode.SURVIVAL);
+
+        if (player.isFlying()) {
+            player.setFlying(false);
+        }
+
+        if (player.getAllowFlight()) {
+            player.setAllowFlight(false);
+        }
+
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+
+        player.setExp(0);
+        player.setTotalExperience(0);
+
+        player.setFallDistance(0);
+        player.setFireTicks(0);
+        player.setHealth(player.getMaxHealth());
+        player.setFoodLevel(20);
+        player.setSaturation(20f);
+
+        for (PotionEffect e : player.getActivePotionEffects()) {
+            player.removePotionEffect(e.getType());
+        }
+
+        player.updateInventory();
+    }
+
+    public void sendClickableMessage(String message, String command){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        TextComponent component = new TextComponent(StringUtil.CC(message));
+        component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/" + command));
+        player.spigot().sendMessage(component);
+    }
+
+    public void hide(Profile target){
+        if (player.canSee(target.getPlayer())){
+            player.hidePlayer(target.getPlayer());
+        }
+    }
+
+    public void show(Profile target){
+        if (!player.canSee(target.getPlayer())) {
+            player.showPlayer(target.getPlayer());
+        }
     }
 
     public void saveKitPreset(Ladder ladder, ItemStack[] inventory){
@@ -129,40 +279,16 @@ public class Profile {
     }
 
     public void startSpectatingMatch(Match match){
-
         sendMessage("&aYou are now spectating a match...");
-
         spectatingMatch = match;
-
-        PlayerUtil.resetPlayer(player);
-
-        player.setAllowFlight(true);
-        player.setFlying(true);
-        player.setGameMode(GameMode.CREATIVE);
-
-        //match.addSpectator(this);
-
-        // hide spectators from the alive players in game
-        //match.getAlivePlayers(match.getProfileMap()).forEach(profile -> {
-        //    profile.getPlayer().hidePlayer(player);
-        //});
+        match.addSpectator(this);
     }
 
     public void stopSpectatingMatch(){
 
         sendMessage("&cYou are no longer spectating a match...");
 
-        //match.removeSpectator(this);
-
-        teleport(Practice.get().getConfigManager().getMainSpawn());
-        PlayerUtil.resetPlayer(player);
-        InventoryUtil.setSpawnInventory(player);
-
-        // show player back to the players in match once the player is no longer spectating
-        //match.getAlivePlayers(match.getProfileMap()).forEach(profile -> {
-        //    profile.getPlayer().showPlayer(player);
-        //});
-
+        spectatingMatch.removeSpectator(this);
         spectatingMatch = null;
     }
 
@@ -226,14 +352,6 @@ public class Profile {
         return spectatingMatch != null;
     }
 
-    public Profile getMatchOpponent(){
-
-        if (isInMatch()){
-            return match.getOpponentList(this).get(0);
-        }
-        return null;
-    }
-
     public boolean isInQueue(){
         return ladderQueued != null;
     }
@@ -257,5 +375,18 @@ public class Profile {
         PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleComponent, fadeIn, stay, fadeOut);
 
         craftPlayer.getHandle().playerConnection.sendPacket(titlePacket);
+    }
+
+    public void sendTitle(final String title, final String subTitle, int fadeIn, int stay, int fadeOut){
+        IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + StringUtil.CC(title) + "\"}");
+        PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleComponent, fadeIn, stay, fadeOut);
+
+        // Subtitle component
+        IChatBaseComponent subtitleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + StringUtil.CC(subTitle) + "\"}");
+        PacketPlayOutTitle subtitlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE, subtitleComponent, fadeIn, stay, fadeOut);
+
+        // Send both packets to the player
+        entityPlayer.playerConnection.sendPacket(titlePacket);
+        entityPlayer.playerConnection.sendPacket(subtitlePacket);
     }
 }

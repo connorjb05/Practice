@@ -6,6 +6,7 @@ import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.impl.DuelMenu;
 import net.syphlex.practice.manager.profile.Profile;
+import net.syphlex.practice.manager.profile.objects.PlayerSettings;
 import net.syphlex.practice.manager.profile.objects.PlayerState;
 import net.syphlex.practice.util.AbstractCmd;
 import net.syphlex.practice.util.Messages;
@@ -33,8 +34,18 @@ public class DuelCmd extends AbstractCmd {
 
             final Profile target = Practice.get().getProfileManager().get(t);
 
+            if (profile == target){
+                profile.sendMessage("&cYou cannot duel yourself.");
+                return;
+            }
+
             if (target.isInMatch() || target.getPlayerState() != PlayerState.IN_SPAWN) {
                 profile.sendMessage("&cThat player is not at spawn.");
+                return;
+            }
+
+            if (!target.getSetting(PlayerSettings.DUEL_REQUEST)) {
+                profile.sendMessage("&cThat player has duel requests disabled.");
                 return;
             }
 
@@ -49,7 +60,6 @@ public class DuelCmd extends AbstractCmd {
                     profile.sendMessage("&cYou can only send a duel request to the leader of the party.");
                     return;
                 }
-
             }
 
             profile.openMenu(new DuelMenu(target));

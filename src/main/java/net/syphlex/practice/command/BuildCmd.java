@@ -24,9 +24,9 @@ public class BuildCmd extends AbstractCmd {
             profile.getPlayer().setGameMode(GameMode.CREATIVE);
             profile.sendMessage("&aYou have enabled your building permissions.");
         } else {
-            PlayerUtil.resetPlayer(profile.getPlayer());
+            profile.reset();
+            profile.setLobbyInventory();
             profile.teleport(Practice.get().getConfigManager().getMainSpawn());
-            InventoryUtil.setSpawnInventory(profile.getPlayer());
             profile.getPlayer().setGameMode(GameMode.SURVIVAL);
 
             profile.sendMessage("&cYou have disabled your building permissions.");

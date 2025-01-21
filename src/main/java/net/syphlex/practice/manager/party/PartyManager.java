@@ -3,11 +3,6 @@ package net.syphlex.practice.manager.party;
 import lombok.Getter;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.profile.Profile;
-import net.syphlex.practice.util.InventoryUtil;
-import net.syphlex.practice.util.PlayerUtil;
-import net.syphlex.practice.manager.profile.Profile;
-import net.syphlex.practice.util.InventoryUtil;
-import net.syphlex.practice.util.PlayerUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,9 +24,9 @@ public class PartyManager {
         partyMap.putIfAbsent(profile, party);
         profile.setParty(party);
 
-        profile.sendMessage("&aYou have successfully created a party.");
+        profile.sendMessage("&aYou have created a party.");
 
-        InventoryUtil.setPartyInventory(profile.getPlayer());
+        profile.setPartyInventory();
     }
 
     public void onLeaveOrDisband(Profile profile) {
@@ -55,8 +50,7 @@ public class PartyManager {
 
         }
 
-
-        InventoryUtil.setSpawnInventory(profile.getPlayer());
+        profile.setLobbyInventory();
     }
 
     public void onJoin(Profile profile, Party party){
@@ -73,8 +67,7 @@ public class PartyManager {
 
             profile.getPartyInvitations().clear();
 
-            InventoryUtil.setPartyInventory(profile.getPlayer());
-
+            profile.setPartyInventory();
             return;
         }
 
@@ -96,7 +89,7 @@ public class PartyManager {
 
         profile.getPartyInvitations().clear();
 
-        InventoryUtil.setPartyInventory(profile.getPlayer());
+        profile.setPartyInventory();
     }
 
     public void onInvite(Profile profile, Profile inviter, Party party){
@@ -120,7 +113,7 @@ public class PartyManager {
                 + profile.getPlayer().getName() + Practice.SECONDARY_COLOR + " was invited to the party.");
 
         profile.sendMessage(" ");
-        PlayerUtil.sendClickableText(profile.getPlayer(),
+        profile.sendClickableMessage(
                 Practice.TERTIARY_COLOR + "(Party) " + Practice.PRIMARY_COLOR
                         + "You" + Practice.SECONDARY_COLOR + " were invited to "
                         + Practice.PRIMARY_COLOR + party.getLeader().getPlayer().getName() + "'s "

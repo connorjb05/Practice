@@ -6,7 +6,6 @@ import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.profile.Profile;
-import net.syphlex.practice.util.InventoryUtil;
 import org.bukkit.ChatColor;
 
 import java.util.*;
@@ -71,8 +70,8 @@ public class QueueManager {
                             p1.setLadderQueued(null);
                             p2.setLadderQueued(null);
 
-                            InventoryUtil.setSpawnInventory(p1.getPlayer());
-                            InventoryUtil.setSpawnInventory(p2.getPlayer());
+                            p1.setLobbyInventory();
+                            p2.setLobbyInventory();
                             continue;
                         }
 
@@ -125,7 +124,7 @@ public class QueueManager {
             profile.sendMessage(" ");
 
             if (!profile.isInMatch()) {
-                InventoryUtil.setQueuedInventory(profile.getPlayer());
+                profile.setQueueInventory();
             }
 
             profile.setLadderQueued(ladder);
@@ -155,7 +154,7 @@ public class QueueManager {
         profile.setLadderQueued(null);
 
         if (!profile.isInMatch()) {
-            InventoryUtil.setSpawnInventory(profile.getPlayer());
+            profile.setLobbyInventory();
         }
     }
 

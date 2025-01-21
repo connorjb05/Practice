@@ -3,6 +3,7 @@ package net.syphlex.practice.command;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.ladder.Ladder;
+import net.syphlex.practice.manager.menu.impl.arena.MainArenaManageMenu;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.AbstractCmd;
 import net.syphlex.practice.util.Messages;
@@ -124,7 +125,7 @@ public class ArenaCmd extends AbstractCmd {
                 profile.sendMessage("&aTeleporting to " + arenaName + "...");
                 profile.teleport(Practice.get().getArenaManager().getArenaMap().get(arenaName).getSpectate());
 
-            } else if (args[0].equalsIgnoreCase("kits")) {
+            } else if (args[0].equalsIgnoreCase("ladders")) {
 
                 if (!Practice.get().getArenaManager().arenaExists(arenaName)) {
                     profile.sendMessage("&cCould not find an arena with that name.");
@@ -154,6 +155,16 @@ public class ArenaCmd extends AbstractCmd {
                 profile.sendMessage( Practice.PRIMARY_COLOR + " » " + Practice.SECONDARY_COLOR + arenaName
                         + ": " + (Practice.get().getArenaManager().getArenaMap().get(arenaName).isOpen() ? "&aOpen" : "&cIn Use"));
             }
+
+        } else if (args.length == 1 && args[0].equalsIgnoreCase("manage")) {
+
+            if (Practice.get().getArenaManager().getArenaMap().isEmpty()) {
+                profile.sendMessage("&cThere are no arenas to manage.");
+                return;
+            }
+
+            profile.openMenu(new MainArenaManageMenu(1));
+            profile.sendMessage("&aSelect an arena to manage...");
 
         } else if (args.length == 3 && args[0].equalsIgnoreCase("addladder")) {
 
@@ -213,6 +224,7 @@ public class ArenaCmd extends AbstractCmd {
         } else {
             profile.sendMessage(" ");
             profile.sendMessage(Practice.PRIMARY_COLOR + "&lArena Help:");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena manage");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena create" + Practice.SECONDARY_COLOR + " <arena>");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena delete" + Practice.SECONDARY_COLOR + " <arena>");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena pos1" + Practice.SECONDARY_COLOR + " <arena>");
@@ -222,7 +234,7 @@ public class ArenaCmd extends AbstractCmd {
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena spectate" + Practice.SECONDARY_COLOR + " <arena>");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena addladder" + Practice.SECONDARY_COLOR + " <kit> <arena>");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena delladder" + Practice.SECONDARY_COLOR + " <kit> <arena>");
-            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena kits" + Practice.SECONDARY_COLOR + " <arena>");
+            profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena ladders" + Practice.SECONDARY_COLOR + " <arena>");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena list");
             profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.TERTIARY_COLOR + "/arena teleport" + Practice.SECONDARY_COLOR + " <arena>");
             profile.sendMessage(" ");

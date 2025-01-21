@@ -66,8 +66,8 @@ public abstract class PracticeEvent implements Listener {
     public void endEvent(){
 
         for (Profile profile : playerMap.keySet()) {
-            PlayerUtil.resetPlayer(profile.getPlayer());
-            InventoryUtil.setSpawnInventory(profile.getPlayer());
+            profile.reset();
+            profile.setLobbyInventory();
             profile.teleport(Practice.get().getConfigManager().getMainSpawn());
         }
 
@@ -85,7 +85,7 @@ public abstract class PracticeEvent implements Listener {
         profile.setLastAttacker(null);
         playerMap.put(profile, new Pair<>(-1, true));
 
-        PlayerUtil.resetPlayer(profile.getPlayer());
+        profile.reset();
         profile.teleport(spectateLoc);
 
         sendEventMessage("&a" + profile.getPlayer().getName()
@@ -101,8 +101,8 @@ public abstract class PracticeEvent implements Listener {
 
         profile.sendMessage("&cYou have left the event.");
 
-        PlayerUtil.resetPlayer(profile.getPlayer());
-        InventoryUtil.setSpawnInventory(profile.getPlayer());
+        profile.reset();
+        profile.setLobbyInventory();
         profile.teleport(Practice.get().getConfigManager().getMainSpawn());
     }
 
@@ -114,7 +114,7 @@ public abstract class PracticeEvent implements Listener {
                 + Practice.PRIMARY_COLOR + profile.getPlayer().getName()
                 + Practice.QUATERNARY_COLOR + " is spectating the event.");
 
-        PlayerUtil.resetPlayer(profile.getPlayer());
+        profile.reset();
         profile.teleport(spectateLoc);
 
         profile.getPlayer().getInventory().setItem(8, ItemUtil.getLeaveEventItem());
@@ -252,7 +252,7 @@ public abstract class PracticeEvent implements Listener {
         if (playerMap.containsKey(profile)) {
 
             if (eventState == EventState.STARTING || isSpectating(profile)) {
-                e.setCancelled(true);
+                //e.setCancelled(true);
                 return;
             }
         }

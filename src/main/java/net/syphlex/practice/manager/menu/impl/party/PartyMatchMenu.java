@@ -21,21 +21,21 @@ public class PartyMatchMenu extends Menu {
 
         inventory.setItem(12, new ItemBuilder()
                 .setMaterial(Material.DIAMOND_AXE)
-                .setName(Practice.TERTIARY_COLOR + "Party FFA Match")
+                .setName(Practice.PRIMARY_COLOR + "&lParty FFA Match")
                 .setLore(Arrays.asList(
                         " ",
-                        "&7Click to select a kit for a",
-                        "&7party ffa match.",
+                        "&fClick to select a kit for a",
+                        "&fparty ffa match.",
                         " "))
                 .build());
 
         inventory.setItem(14, new ItemBuilder()
                 .setMaterial(Material.DIAMOND_SWORD)
-                .setName(Practice.TERTIARY_COLOR + "Party Split Match")
+                .setName(Practice.PRIMARY_COLOR + "&lParty Split Match")
                 .setLore(Arrays.asList(
                         " ",
-                        "&7Click to select a kit for a",
-                        "&7party split match.",
+                        "&fClick to select a kit for a",
+                        "&fparty split match.",
                         " "))
                 .build());
     }

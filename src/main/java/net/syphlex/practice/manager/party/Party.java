@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.profile.Profile;
-import net.syphlex.practice.util.InventoryUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,10 +68,10 @@ public class Party {
             members.sendMessage("&cYou have left "
                     + leader.getPlayer().getName() + "'s party. &7(Disbanded)");
 
-            InventoryUtil.setSpawnInventory(members.getPlayer());
-
             members.setParty(null);
             members.setPartyChat(false);
+
+            members.setLobbyInventory();
         }
 
         leader.setParty(null);

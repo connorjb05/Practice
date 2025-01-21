@@ -1,4 +1,4 @@
-package net.syphlex.practice.manager.menu.impl;
+package net.syphlex.practice.manager.menu.impl.settings;
 
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
@@ -13,12 +13,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SettingsMenu extends Menu {
+public class ProfileSettingsMenu extends Menu {
 
     private final Profile profile;
 
-    public SettingsMenu(Profile profile) {
-        super("Settings", 27);
+    public ProfileSettingsMenu(Profile profile) {
+        super("Profile Settings", 27);
 
         this.profile = profile;
 
@@ -26,7 +26,6 @@ public class SettingsMenu extends Menu {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)15));
         }
 
-        int slot = 10;
         for (PlayerSettings setting : PlayerSettings.values()) {
 
             boolean settingEnabled = profile.getSetting(setting);
@@ -68,19 +67,16 @@ public class SettingsMenu extends Menu {
             itemMeta.setLore(StringUtil.CC(lore));
             itemStack.setItemMeta(itemMeta);
 
-            inventory.setItem(slot, itemStack);
-
-            slot++;
+            inventory.setItem(setting.getSlot(), itemStack);
         }
     }
 
     @Override
     public void onClickEvent(MenuClickEvent e) {
 
-        int slot = 10;
         for (PlayerSettings setting : PlayerSettings.values()) {
 
-            if (e.getSlot() == slot) {
+            if (e.getSlot() == setting.getSlot()) {
 
                 profile.setSetting(setting, !profile.getSetting(setting));
 
@@ -127,11 +123,9 @@ public class SettingsMenu extends Menu {
                 itemMeta.setLore(StringUtil.CC(lore));
                 itemStack.setItemMeta(itemMeta);
 
-                inventory.setItem(slot, itemStack);
+                inventory.setItem(setting.getSlot(), itemStack);
                 break;
             }
-
-            slot++;
         }
     }
 }

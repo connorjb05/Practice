@@ -136,7 +136,7 @@ public class LeaderboardManager {
 
         UUID uuid = profile.getPlayer().getUniqueId();
 
-        int opponentElo = getElo(profile.getMatchOpponent().getPlayer().getUniqueId(), ladder);
+        int opponentElo = getElo(profile.getMatch().getOpponents(profile).getAsList().get(0).getPlayer().getUniqueId(), ladder);
 
         int profileElo = getElo(uuid, ladder);
 

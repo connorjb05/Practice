@@ -6,6 +6,8 @@ import net.syphlex.practice.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 public class ComboLadder extends Ladder {
     public ComboLadder(String name) {
@@ -16,6 +18,8 @@ public class ComboLadder extends Ladder {
                 .setDurability((short)3)
                 .setName(Practice.PRIMARY_COLOR + "Combo")
                 .build();
+
+        potionEffects.add(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
 
         inventory = new ItemStack[36];
         armor = new ItemStack[4];
@@ -74,23 +78,6 @@ public class ComboLadder extends Ladder {
                 .setMaterial(Material.DIAMOND_CHESTPLATE)
                 .addVanillaEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 10)
                 .addVanillaEnchant(Enchantment.DURABILITY, 10)
-                .build();
-
-        inventory[7] = new ItemBuilder()
-                .setMaterial(Material.POTION)
-                .setDurability((short)8226)
-                .build();
-        inventory[16] = new ItemBuilder()
-                .setMaterial(Material.POTION)
-                .setDurability((short)8226)
-                .build();
-        inventory[25] = new ItemBuilder()
-                .setMaterial(Material.POTION)
-                .setDurability((short)8226)
-                .build();
-        inventory[34] = new ItemBuilder()
-                .setMaterial(Material.POTION)
-                .setDurability((short)8226)
                 .build();
         //inventory[7] = new ItemBuilder()
         //        .setMaterial(Material.POTION)

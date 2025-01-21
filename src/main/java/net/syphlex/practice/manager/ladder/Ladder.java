@@ -1,6 +1,7 @@
 package net.syphlex.practice.manager.ladder;
 
 import lombok.Getter;
+import net.syphlex.practice.manager.ladder.impl.BedFightLadder;
 import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
 import net.syphlex.practice.manager.ladder.impl.SumoLadder;
 import net.syphlex.practice.manager.profile.Profile;
@@ -43,7 +44,8 @@ public abstract class Ladder {
             return;
         }
 
-        profile.getPlayer().getInventory().setItem(0, ItemUtil.getBookKit(this));
+        giveKit(profile);
+        //profile.getPlayer().getInventory().setItem(0, ItemUtil.getBookKit(this));
     }
 
     public void giveKit(Profile profile){
@@ -82,7 +84,7 @@ public abstract class Ladder {
             }
 
             // red team (team 1)
-            if (profile.getMatch().isTeamOne(profile)) {
+            if (profile.getMatch().getTeamOne().isInTeam(profile)) {
 
                 inventory[claySlot1] = new ItemBuilder()
                         .setMaterial(Material.STAINED_CLAY)
@@ -149,11 +151,79 @@ public abstract class Ladder {
             }
         }
 
+        if (profile.getMatch().getLadder() instanceof BedFightLadder) {
+
+            int woolSlot = -1;
+
+            for (int i = 0; i < inventory.length; i++) {
+                if (inventory[i] != null && inventory[i].getType() == Material.WOOL) {
+                    woolSlot = i;
+                }
+            }
+
+            // red team (team 1)
+            if (profile.getMatch().getTeamOne().isInTeam(profile)) {
+
+                inventory[woolSlot] = new ItemBuilder()
+                        .setMaterial(Material.WOOL)
+                        .setDurability((short)14)
+                        .setAmount(64)
+                        .build();
+
+                armor[0] = new ItemBuilder()
+                        .setMaterial(Material.LEATHER_BOOTS)
+                        .setColor(255, 0, 0)
+                        .setUnbreakable(true)
+                        .build();
+
+                armor[1] = new ItemBuilder()
+                        .setMaterial(Material.LEATHER_LEGGINGS)
+                        .setColor(255, 0, 0)
+                        .setUnbreakable(true)
+                        .build();
+
+                armor[2] = new ItemBuilder()
+                        .setMaterial(Material.LEATHER_CHESTPLATE)
+                        .setColor(255, 0, 0)
+                        .setUnbreakable(true)
+                        .build();
+
+            } else {
+                // blue team (team 2)
+
+                inventory[woolSlot] = new ItemBuilder()
+                        .setMaterial(Material.WOOL)
+                        .setDurability((short)11)
+                        .setAmount(64)
+                        .build();
+
+                armor[0] = new ItemBuilder()
+                        .setMaterial(Material.LEATHER_BOOTS)
+                        .setColor(0, 0, 255)
+                        .setUnbreakable(true)
+                        .build();
+
+                armor[1] = new ItemBuilder()
+                        .setMaterial(Material.LEATHER_LEGGINGS)
+                        .setColor(0, 0, 255)
+                        .setUnbreakable(true)
+                        .build();
+
+                armor[2] = new ItemBuilder()
+                        .setMaterial(Material.LEATHER_CHESTPLATE)
+                        .setColor(0, 0, 255)
+                        .setUnbreakable(true)
+                        .build();
+            }
+        }
+
         profile.getPlayer().getInventory().setContents(inventory);
         profile.getPlayer().getInventory().setArmorContents(armor);
 
         if (!potionEffects.isEmpty()) {
             profile.getPlayer().addPotionEffects(potionEffects);
         }
+
+        profile.getPlayer().updateInventory();
     }
 }

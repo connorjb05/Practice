@@ -6,7 +6,6 @@ import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
-import net.syphlex.practice.util.PlayerUtil;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -69,7 +68,7 @@ public class DuelMenu extends Menu {
                         + Core.get().getPlayerDataManager().get(target.getPlayer()).getRank().getColor()
                         + target.getPlayer().getName() + (target.isInParty() ? "'s"
                         + Practice.QUATERNARY_COLOR + " Party" : ""));
-                profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
+                profile.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Ladder: "
                         + Practice.PRIMARY_COLOR + ladder.getName());
                 profile.sendMessage(" ");
 
@@ -77,27 +76,23 @@ public class DuelMenu extends Menu {
 
 
                     target.sendMessage(" ");
-                    PlayerUtil.sendClickableText(
-                            target.getPlayer(),
+                    target.sendClickableMessage(
                             Practice.PRIMARY_COLOR + "&lDuel Request &7(Click to accept)",
                             "duel accept " + profile.getPlayer().getName());
-                    PlayerUtil.sendClickableText(
-                            target.getPlayer(),
+                    target.sendClickableMessage(
                             Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "From: "
                                     + Practice.PRIMARY_COLOR
                                     + Core.get().getPlayerDataManager().get(profile.getPlayer()).getRank().getColor()
                                     + profile.getPlayer().getName() + (profile.isInParty() ? "'s"
                                     + Practice.QUATERNARY_COLOR + " Party" : ""),
                             "duel accept " + profile.getPlayer().getName());
-                    PlayerUtil.sendClickableText(
-                            target.getPlayer(),
+                    target.sendClickableMessage(
                             Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Party Size: "
                                     + Practice.PRIMARY_COLOR
                                     + (profile.isInParty() ? profile.getParty().getPartySize() : 1),
                             "duel accept " + profile.getPlayer().getName());
-                    PlayerUtil.sendClickableText(
-                            target.getPlayer(),
-                            Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
+                    target.sendClickableMessage(
+                            Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Ladder: "
                                     + Practice.PRIMARY_COLOR + ladder.getName(),
                             "duel accept " + profile.getPlayer().getName());
                     target.sendMessage(" ");
@@ -113,7 +108,7 @@ public class DuelMenu extends Menu {
                         members.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Party Size: "
                                 + Practice.PRIMARY_COLOR
                                 + (profile.isInParty() ? profile.getParty().getPartySize() : 1));
-                        members.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
+                        members.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Ladder: "
                                 + Practice.PRIMARY_COLOR + ladder.getName());
                         members.sendMessage(" ");
                     }
@@ -128,29 +123,26 @@ public class DuelMenu extends Menu {
                                     + Practice.PRIMARY_COLOR
                                     + Core.get().getPlayerDataManager().get(target.getPlayer()).getRank().getColor()
                                     + target.getPlayer().getName() + (target.isInParty() ? "'s"
-                                    + Practice.QUATERNARY_COLOR +  " Party" : ""));
-                            members.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
+                                    + Practice.QUATERNARY_COLOR + " Party" : ""));
+                            members.sendMessage(Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Ladder: "
                                     + Practice.PRIMARY_COLOR + ladder.getName());
                             members.sendMessage(" ");
                         }
                     }
 
                     target.sendMessage(" ");
-                    PlayerUtil.sendClickableText(
-                            target.getPlayer(),
+                    target.sendClickableMessage(
                             Practice.PRIMARY_COLOR + "&lDuel Request &7(Click to accept)",
                             "duel accept " + profile.getPlayer().getName());
-                    PlayerUtil.sendClickableText(
-                            target.getPlayer(),
+                    target.sendClickableMessage(
                             Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "From: "
                                     + Practice.PRIMARY_COLOR
                                     + Core.get().getPlayerDataManager().get(profile.getPlayer()).getRank().getColor()
                                     + profile.getPlayer().getName() + (profile.isInParty() ? "'s"
                                     + Practice.QUATERNARY_COLOR + " Party" : ""),
                             "duel accept " + profile.getPlayer().getName());
-                    PlayerUtil.sendClickableText(
-                            target.getPlayer(),
-                            Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Kit: "
+                    target.sendClickableMessage(
+                            Practice.PRIMARY_COLOR + " » " + Practice.QUATERNARY_COLOR + "Ladder: "
                                     + Practice.PRIMARY_COLOR + ladder.getName(),
                             "duel accept " + profile.getPlayer().getName());
                     target.sendMessage(" ");
