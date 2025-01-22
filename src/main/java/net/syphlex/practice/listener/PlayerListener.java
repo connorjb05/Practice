@@ -5,7 +5,7 @@ import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.ladder.impl.*;
 import net.syphlex.practice.manager.match.MatchState;
-import net.syphlex.practice.manager.menu.impl.bot.BotMatchMenu;
+import net.syphlex.practice.manager.menu.impl.bot.BotLadderMenu;
 import net.syphlex.practice.manager.menu.impl.LeaderboardsMenu;
 import net.syphlex.practice.manager.menu.impl.kiteditor.KitEditorSelectionMenu;
 import net.syphlex.practice.manager.menu.impl.party.FightOtherPartyMenu;
@@ -29,7 +29,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 
 import java.text.DecimalFormat;
 
@@ -303,7 +302,7 @@ public class PlayerListener implements Listener {
 
                         // open bot match menu
 
-                        profile.openMenu(new BotMatchMenu());
+                        profile.openMenu(new BotLadderMenu());
 
                     } else if (item.isSimilar(ItemUtil.getEventHostItem())) {
 

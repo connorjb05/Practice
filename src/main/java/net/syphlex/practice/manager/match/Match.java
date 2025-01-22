@@ -8,6 +8,7 @@ import net.syphlex.core.rank.Rank;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.arena.block.BlockTracker;
+import net.syphlex.practice.manager.bot.Bot;
 import net.syphlex.practice.manager.ladder.Ladder;
 import net.syphlex.practice.manager.ladder.impl.BedFightLadder;
 import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
@@ -206,28 +207,55 @@ public class Match {
 
                 // Display the opponents' rank, Elo, and ping
                 for (Profile opponent : opponents) {
-                    Rank rank = Core.get().getPlayerDataManager().get(opponent.getPlayer()).getRank();
-                    int elo = Practice.get().getLeaderboardManager().getElo(opponent.getPlayer().getUniqueId(), ladder);
 
-                    profile.sendMessage(Practice.PRIMARY_COLOR + " » "
-                            + Practice.QUATERNARY_COLOR + "Opponents:");
-                    profile.sendMessage(Practice.PRIMARY_COLOR + "   »  "
-                            + rank.getColor() + opponent.getPlayer().getName()
-                            + "&7(" + elo + " Elo) (" + opponent.getPing() + "ms)");
+                    if (opponent instanceof Bot) {
+
+                        String opponentName = ((Bot)opponent).getBotDifficulty().getBotName();
+
+                        profile.sendMessage(Practice.PRIMARY_COLOR + " » "
+                                + Practice.QUATERNARY_COLOR + "Opponents:");
+                        profile.sendMessage(Practice.PRIMARY_COLOR + "   »  "
+                                + opponentName + " (" + opponent.getPing() + "ms)");
+                    } else {
+
+                        Rank rank = Core.get().getPlayerDataManager().get(opponent.getPlayer()).getRank();
+                        int elo = Practice.get().getLeaderboardManager().getElo(opponent.getPlayer().getUniqueId(), ladder);
+
+                        profile.sendMessage(Practice.PRIMARY_COLOR + " » "
+                                + Practice.QUATERNARY_COLOR + "Opponents:");
+                        profile.sendMessage(Practice.PRIMARY_COLOR + "   »  "
+                                + rank.getColor() + opponent.getPlayer().getName()
+                                + "&7(" + elo + " Elo) (" + opponent.getPing() + "ms)");
+                    }
                 }
 
                 // If there is only one opponent (e.g., duel), display single opponent info
             } else {
-                Rank rank = Core.get().getPlayerDataManager().get(opponents.get(0).getPlayer()).getRank();
-                int elo = Practice.get().getLeaderboardManager().getElo(opponents.get(0).getPlayer().getUniqueId(), ladder);
 
-                profile.sendMessage(Practice.PRIMARY_COLOR + " » "
-                        + Practice.QUATERNARY_COLOR + "Opponent: "
-                        + rank.getColor() + opponents.get(0).getPlayer().getName()
-                        + " &7(" + elo + " Elo)");
-                profile.sendMessage(Practice.PRIMARY_COLOR + " » "
-                        + Practice.QUATERNARY_COLOR + "Ping: "
-                        + Practice.PRIMARY_COLOR + opponents.get(0).getPing() + "ms");
+                Profile opponent = opponents.get(0);
+                String opponentName = "";
+
+                if (opponents.get(0) instanceof Bot) {
+                    opponentName = ((Bot)opponent).getBotDifficulty().getBotName();
+
+                    profile.sendMessage(Practice.PRIMARY_COLOR + " » "
+                            + Practice.QUATERNARY_COLOR + "Opponent: "
+                            + opponentName);
+                    profile.sendMessage(Practice.PRIMARY_COLOR + " » "
+                            + Practice.QUATERNARY_COLOR + "Ping: "
+                            + Practice.PRIMARY_COLOR + opponents.get(0).getPing() + "ms");
+                } else {
+                    Rank rank = Core.get().getPlayerDataManager().get(opponents.get(0).getPlayer()).getRank();
+                    int elo = Practice.get().getLeaderboardManager().getElo(opponents.get(0).getPlayer().getUniqueId(), ladder);
+
+                    profile.sendMessage(Practice.PRIMARY_COLOR + " » "
+                            + Practice.QUATERNARY_COLOR + "Opponent: "
+                            + rank.getColor() + opponents.get(0).getPlayer().getName()
+                            + " &7(" + elo + " Elo)");
+                    profile.sendMessage(Practice.PRIMARY_COLOR + " » "
+                            + Practice.QUATERNARY_COLOR + "Ping: "
+                            + Practice.PRIMARY_COLOR + opponents.get(0).getPing() + "ms");
+                }
             }
             profile.sendMessage(" ");
         }
@@ -256,10 +284,10 @@ public class Match {
 
                     // If it's a Free-For-All (FFA) match, check if there's only one player left
                 } else {
-                    List<Profile> ffa = Match.this.teamFFA.getAsList();
+                    List<Profile> ffa = Match.this.teamFFA.getAliveList();
 
                     // End the match if there's only one player left in FFA
-                    if (ffa.size() == 1) {
+                    if (ffa.size() <= 1) {
                         endMatch(false);
                         return;
                     }
@@ -708,6 +736,7 @@ public class Match {
                     profile.sendTitle("&c&lYOU DIED", Practice.QUATERNARY_COLOR
                             + "Respawning in " + Practice.PRIMARY_COLOR + profile.getRespawnTimer()
                             + Practice.QUATERNARY_COLOR + " seconds...", 5, 10, 5);
+                    profile.sendSound(Sound.CLICK);
                 }
 
                 if (profile.getRespawnTimer() <= 0) {
@@ -732,6 +761,7 @@ public class Match {
 
                     // clear old title
                     profile.sendTitle("&c", 5, 10, 5);
+                    profile.sendSound(Sound.ORB_PICKUP);
 
                     cancel();
                     return;

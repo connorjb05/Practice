@@ -13,7 +13,7 @@ public class BowLadder extends Ladder {
 
         menuIcon = new ItemBuilder()
                 .setMaterial(Material.BOW)
-                .setName(Practice.PRIMARY_COLOR + "Bow")
+                .setName(Practice.PRIMARY_COLOR + "&lBow")
                 .build();
 
         armor = new ItemStack[4];

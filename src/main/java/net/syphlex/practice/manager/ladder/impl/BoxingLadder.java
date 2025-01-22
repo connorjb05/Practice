@@ -15,7 +15,7 @@ public class BoxingLadder extends Ladder {
 
         menuIcon = new ItemBuilder()
                 .setMaterial(Material.DIAMOND_CHESTPLATE)
-                .setName(Practice.PRIMARY_COLOR + "Boxing")
+                .setName(Practice.PRIMARY_COLOR + "&lBoxing")
                 .build();
 
         inventory = new ItemStack[36];

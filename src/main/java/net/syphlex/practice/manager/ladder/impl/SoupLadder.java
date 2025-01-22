@@ -12,7 +12,7 @@ public class SoupLadder extends Ladder {
         super(name);
 
         menuIcon = new ItemBuilder()
-                .setName(Practice.PRIMARY_COLOR + "Soup")
+                .setName(Practice.PRIMARY_COLOR + "&lSoup")
                 .setAmount(1)
                 .setMaterial(Material.MUSHROOM_SOUP)
                 .build();

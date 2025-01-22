@@ -1,8 +1,10 @@
 package net.syphlex.practice.listener;
 
 //import com.ngxdev.entity.PotionEffectAddEvent;
+import net.citizensnpcs.api.CitizensAPI;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.arena.block.WrappedBlockState;
+import net.syphlex.practice.manager.bot.Bot;
 import net.syphlex.practice.manager.ladder.impl.BedFightLadder;
 import net.syphlex.practice.manager.ladder.impl.BoxingLadder;
 import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
@@ -42,6 +44,10 @@ public class MatchListener implements Listener {
             return;
         }
 
+        if (CitizensAPI.getNPCRegistry().isNPC(e.getEntity())) {
+            return;
+        }
+
         final Player p = (Player) e.getEntity();
         final Profile victim = Practice.get().getProfileManager().get(p);
 
@@ -73,6 +79,11 @@ public class MatchListener implements Listener {
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e) {
 
         if (!(e.getEntity() instanceof Player)) {
+            return;
+        }
+
+        if (CitizensAPI.getNPCRegistry().isNPC(e.getEntity())
+                || CitizensAPI.getNPCRegistry().isNPC(e.getDamager())) {
             return;
         }
 

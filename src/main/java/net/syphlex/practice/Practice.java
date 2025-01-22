@@ -72,6 +72,7 @@ public class Practice extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new WorldListener(), this);
         Bukkit.getPluginManager().registerEvents(new PotionListener(), this);
 
+        new TestCmd("test");
         new PracticeCmd("practice");
         new ArenaCmd("arena");
         new PartyCmd("party");

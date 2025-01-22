@@ -40,6 +40,7 @@ public class MatchTeam {
 
     public void add(Profile profile){
         teamMap.put(profile, true);
+        Practice.get().getQueueManager().getPlayersInMatch().remove(profile);
     }
 
     public void remove(Profile profile){
@@ -188,8 +189,7 @@ public class MatchTeam {
     }
 
     public void sendSound(Sound sound){
-        teamMap.keySet().forEach(profile -> profile.getPlayer()
-                .playSound(profile.getPlayer().getLocation(), sound, 7.5f, 2f));
+        teamMap.keySet().forEach(profile -> profile.sendSound(sound));
     }
 
     public List<Profile> getAliveList(){

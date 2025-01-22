@@ -1,6 +1,8 @@
 package net.syphlex.practice.manager.ladder;
 
 import lombok.Getter;
+import net.citizensnpcs.api.npc.NPC;
+import net.syphlex.practice.manager.bot.Bot;
 import net.syphlex.practice.manager.ladder.impl.BedFightLadder;
 import net.syphlex.practice.manager.ladder.impl.BridgeLadder;
 import net.syphlex.practice.manager.ladder.impl.SumoLadder;
@@ -8,6 +10,7 @@ import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.ItemBuilder;
 import net.syphlex.practice.util.ItemUtil;
 import org.bukkit.Material;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 
@@ -35,6 +38,32 @@ public abstract class Ladder {
     public void giveBookKits(Profile profile){
 
         if (profile == null || profile.getPlayer() == null) {
+
+            if (profile instanceof Bot) {
+                Bot bot = (Bot) profile;
+
+                // Set bot's inventory using NPC metadata
+                NPC npc = bot.getNpc();
+                if (npc != null && npc.isSpawned()) {
+                    LivingEntity botEntity = (LivingEntity) npc.getEntity();
+
+                    // Equip the bot's inventory
+                    botEntity.getEquipment().setItemInHand(inventory[0]);
+
+
+                    // Equip the bot's armor
+                    botEntity.getEquipment().setArmorContents(armor);
+
+                    // Apply potion effects
+                    if (!potionEffects.isEmpty()) {
+                        for (PotionEffect effect : potionEffects) {
+                            botEntity.addPotionEffect(effect);
+                        }
+                    }
+                }
+                return;
+            }
+
             return;
         }
 

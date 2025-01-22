@@ -12,7 +12,7 @@ public class NoDebuffLadder extends Ladder {
         super(name);
 
         menuIcon = new ItemBuilder()
-                .setName(Practice.PRIMARY_COLOR + "NoDebuff")
+                .setName(Practice.PRIMARY_COLOR + "&lNoDebuff")
                 .setAmount(1)
                 .setMaterial(Material.POTION)
                 .setDurability((short)16421)

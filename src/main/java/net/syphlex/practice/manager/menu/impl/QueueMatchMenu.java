@@ -8,6 +8,7 @@ import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.StringUtil;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -88,6 +89,9 @@ public class QueueMatchMenu extends Menu {
 
                 Practice.get().getQueueManager().queue(profile, ladder);
                 profile.getPlayer().closeInventory();
+                profile.sendSound(Sound.WOOD_CLICK);
+
+                return;
             }
 
             if (slot == 16) {

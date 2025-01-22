@@ -16,7 +16,7 @@ public class ComboLadder extends Ladder {
         menuIcon = new ItemBuilder()
                 .setMaterial(Material.RAW_FISH)
                 .setDurability((short)3)
-                .setName(Practice.PRIMARY_COLOR + "Combo")
+                .setName(Practice.PRIMARY_COLOR + "&lCombo")
                 .build();
 
         potionEffects.add(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));

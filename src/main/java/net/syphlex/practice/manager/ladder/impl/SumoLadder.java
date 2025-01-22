@@ -14,7 +14,7 @@ public class SumoLadder extends Ladder {
 
         menuIcon = new ItemBuilder()
                 .setMaterial(Material.ANVIL)
-                .setName(Practice.PRIMARY_COLOR + "Sumo")
+                .setName(Practice.PRIMARY_COLOR + "&lSumo")
                 .build();
 
         // empty inventory

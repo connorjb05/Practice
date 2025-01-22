@@ -11,6 +11,7 @@ import net.minecraft.server.v1_8_R3.*;
 import net.syphlex.practice.manager.arena.Arena;
 import net.syphlex.practice.manager.match.MatchInventories;
 import net.syphlex.practice.manager.match.team.MatchTeam;
+import org.bukkit.Sound;
 import org.bukkit.inventory.ItemStack;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.manager.ladder.Ladder;
@@ -73,11 +74,16 @@ public class Profile {
     private long enderpearlCooldown = -1, lastPearlUseTime = -1, lastMatchTimeEnded;
 
     public Profile(final Player player) {
-        this.player = player;
-        this.entityPlayer = ((CraftPlayer) player).getHandle();
+        if (player != null) {
+            this.player = player;
+            this.entityPlayer = ((CraftPlayer) player).getHandle();
 
-        scoreboard = new FastBoard(player);
-        scoreboard.updateTitle(StringUtil.CC(Practice.PRIMARY_COLOR + "&lSyphlex &7❘ &fPractice"));
+            scoreboard = new FastBoard(player);
+            scoreboard.updateTitle(StringUtil.CC(Practice.PRIMARY_COLOR + "&lSyphlex &7❘ &fPractice"));
+        } else {
+            this.player = null;
+            this.entityPlayer = null;
+        }
     }
 
     public MatchTeam getMatchTeam(){
@@ -121,6 +127,7 @@ public class Profile {
         player.getInventory().setArmorContents(null);
 
         player.getInventory().setItem(0, ItemUtil.getQueueMatchItem());
+        //player.getInventory().setItem(1, ItemUtil.getBotMatchItem());
         player.getInventory().setItem(3, ItemUtil.getEventHostItem());
         player.getInventory().setItem(5, ItemUtil.getCreatePartyItem());
         player.getInventory().setItem(6, ItemUtil.getLayoutEditorItem());
@@ -207,13 +214,32 @@ public class Profile {
         player.spigot().sendMessage(component);
     }
 
+    public void sendSound(Sound sound){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        player.playSound(player.getLocation(), sound, 7.5f, 2f);
+    }
+
     public void hide(Profile target){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
         if (player.canSee(target.getPlayer())){
             player.hidePlayer(target.getPlayer());
         }
     }
 
     public void show(Profile target){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
         if (!player.canSee(target.getPlayer())) {
             player.showPlayer(target.getPlayer());
         }
@@ -228,6 +254,11 @@ public class Profile {
     }
 
     public void startEnderpearlCooldown(){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
         // 14 is actually 15 seconds
         enderpearlCooldown = System.currentTimeMillis() + (long) (14 * 1000);
         player.setExp(0.99f);
@@ -273,6 +304,11 @@ public class Profile {
     }
 
     public void setKnockback(String profile){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
         KnockbackProfile knockbackProfile = KnockbackModule.INSTANCE.profiles
                 .getOrDefault(profile, KnockbackModule.getDefault());
         entityPlayer.setKnockback(knockbackProfile);
@@ -294,7 +330,7 @@ public class Profile {
 
     public void sendMessage(String message){
 
-        if (player == null) {
+        if (player == null || !player.isOnline()) {
             return;
         }
 
@@ -306,6 +342,10 @@ public class Profile {
     }
 
     public void teleport(Location location){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
 
         if (location == null) {
             return;
@@ -361,14 +401,29 @@ public class Profile {
     }
 
     public int getPing(){
+
+        if (player == null || !player.isOnline()) {
+            return 0;
+        }
+
         return entityPlayer.ping;
     }
 
     public void sendPacket(Packet<?> packet){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
         ((CraftPlayer)player).getHandle().playerConnection.sendPacket(packet);
     }
 
     public void sendTitle(final String title, int fadeIn, int stay, int fadeOut){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
         CraftPlayer craftPlayer = (CraftPlayer) player;
 
         IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + StringUtil.CC(title) + "\"}");
@@ -378,6 +433,11 @@ public class Profile {
     }
 
     public void sendTitle(final String title, final String subTitle, int fadeIn, int stay, int fadeOut){
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
         IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + StringUtil.CC(title) + "\"}");
         PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleComponent, fadeIn, stay, fadeOut);
 

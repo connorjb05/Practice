@@ -18,7 +18,7 @@ public class BridgeLadder extends Ladder {
         menuIcon = new ItemBuilder()
                 .setMaterial(Material.STAINED_CLAY)
                 .setDurability((short)11)
-                .setName(Practice.PRIMARY_COLOR + "Bridge")
+                .setName(Practice.PRIMARY_COLOR + "&lBridge")
                 .build();
 
         armor = new ItemStack[4];

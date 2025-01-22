@@ -13,7 +13,7 @@ public class BedFightLadder extends Ladder {
 
         menuIcon = new ItemBuilder()
                 .setMaterial(Material.BED)
-                .setName(Practice.PRIMARY_COLOR + "Bed Fight")
+                .setName(Practice.PRIMARY_COLOR + "&lBed Fight")
                 .build();
 
         inventory = new ItemStack[36];

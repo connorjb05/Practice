@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BotMatchMenu extends Menu {
+public class BotLadderMenu extends Menu {
 
-    public BotMatchMenu() {
+    public BotLadderMenu() {
         super("Duel a Bot", 27);
 
         for (int i = 0; i < size; i++) {
@@ -44,6 +44,11 @@ public class BotMatchMenu extends Menu {
                 inventory.setItem(slot, itemStack);
             }
 
+            if (slot == 16) {
+                slot = 21;
+                continue;
+            }
+
             slot++;
         }
     }
@@ -57,6 +62,11 @@ public class BotMatchMenu extends Menu {
             if (e.getSlot() == slot) {
                 e.getProfile().openMenu(new BotDifficultyMenu(ladder));
                 break;
+            }
+
+            if (slot == 16) {
+                slot = 21;
+                continue;
             }
 
             slot++;

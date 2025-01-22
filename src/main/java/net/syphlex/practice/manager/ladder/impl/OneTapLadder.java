@@ -13,7 +13,7 @@ public class OneTapLadder extends Ladder {
 
         menuIcon = new ItemBuilder()
                 .setMaterial(Material.LEASH)
-                .setName(Practice.PRIMARY_COLOR + "One Tap")
+                .setName(Practice.PRIMARY_COLOR + "&lOne Tap")
                 .build();
 
         inventory = new ItemStack[36];

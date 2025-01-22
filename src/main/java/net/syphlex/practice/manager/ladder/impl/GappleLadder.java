@@ -12,7 +12,7 @@ public class GappleLadder extends Ladder {
         super(name);
 
         menuIcon = new ItemBuilder()
-                .setName(Practice.PRIMARY_COLOR + "Gapple")
+                .setName(Practice.PRIMARY_COLOR + "&lGapple")
                 .setMaterial(Material.GOLDEN_APPLE)
                 .setGlowing(true)
                 .build();

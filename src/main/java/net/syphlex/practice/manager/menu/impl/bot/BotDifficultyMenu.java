@@ -3,14 +3,20 @@ package net.syphlex.practice.manager.menu.impl.bot;
 import net.syphlex.practice.Practice;
 import net.syphlex.practice.event.MenuClickEvent;
 import net.syphlex.practice.manager.arena.Arena;
+import net.syphlex.practice.manager.bot.Bot;
+import net.syphlex.practice.manager.bot.BotDifficulty;
 import net.syphlex.practice.manager.ladder.Ladder;
+import net.syphlex.practice.manager.match.Match;
 import net.syphlex.practice.manager.menu.Menu;
 import net.syphlex.practice.manager.profile.Profile;
 import net.syphlex.practice.util.ItemBuilder;
+import net.syphlex.practice.util.Messages;
+import net.syphlex.practice.util.Permissions;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 public class BotDifficultyMenu extends Menu {
 
@@ -25,50 +31,11 @@ public class BotDifficultyMenu extends Menu {
             inventory.setItem(i, new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15));
         }
 
-        inventory.setItem(12, new ItemBuilder()
-                .setMaterial(Material.WOOL)
-                .setDurability((short) 4)
-                .setName("&e&lEasy")
-                .setLore(Arrays.asList(
-                        "&f&m-----------------------",
-                        Practice.PRIMARY_COLOR + " » "
-                                + Practice.SECONDARY_COLOR + "Reach: "
-                                + Practice.PRIMARY_COLOR + "2.0 Blocks",
-                        Practice.PRIMARY_COLOR + " » "
-                                + Practice.SECONDARY_COLOR + "CPS: "
-                                + Practice.PRIMARY_COLOR + "9 Cps",
-                        "&f&m-----------------------"))
-                .build());
-
-        inventory.setItem(13, new ItemBuilder()
-                .setMaterial(Material.WOOL)
-                .setDurability((short) 1)
-                .setName("&6&lModerate")
-                .setLore(Arrays.asList(
-                        "&f&m-----------------------",
-                        Practice.PRIMARY_COLOR + " » "
-                                + Practice.SECONDARY_COLOR + "Reach: "
-                                + Practice.PRIMARY_COLOR + "2.5 Blocks",
-                        Practice.PRIMARY_COLOR + " » "
-                                + Practice.SECONDARY_COLOR + "CPS: "
-                                + Practice.PRIMARY_COLOR + "13 Cps",
-                        "&f&m-----------------------"))
-                .build());
-
-        inventory.setItem(14, new ItemBuilder()
-                .setMaterial(Material.WOOL)
-                .setDurability((short) 14)
-                .setName("&c&lHard")
-                .setLore(Arrays.asList(
-                        "&f&m-----------------------",
-                        Practice.PRIMARY_COLOR + " » "
-                                + Practice.SECONDARY_COLOR + "Reach: "
-                                + Practice.PRIMARY_COLOR + "3.0 Blocks",
-                        Practice.PRIMARY_COLOR + " » "
-                                + Practice.SECONDARY_COLOR + "CPS: "
-                                + Practice.PRIMARY_COLOR + "17 Cps",
-                        "&f&m-----------------------"))
-                .build());
+        int slot = 10;
+        for (BotDifficulty difficulty : BotDifficulty.values()) {
+            inventory.setItem(slot, difficulty.getMenuIcon());
+            slot++;
+        }
     }
 
     @Override
@@ -76,33 +43,35 @@ public class BotDifficultyMenu extends Menu {
 
         final Profile profile = e.getProfile();
 
-        if (e.getSlot() != -1) {
-            //profile.sendMessage("&cThis feature is currently under going development...");
-            //return;
+        if (!profile.hasPermission(Permissions.ADMIN)) {
+            profile.sendMessage(Messages.NO_PERMISSION);
+            profile.sendMessage("&cThis feature is under development... We apologize for the inconvenience.");
+            return;
         }
 
-        switch (e.getSlot()) {
-            case 12:
+        int slot = 10;
+        for (BotDifficulty difficulty : BotDifficulty.values()) {
+            if (e.getSlot() == slot) {
 
                 Arena arena = Practice.get().getArenaManager().getFreeArena(ladder);
 
-                // no arena was found!
                 if (arena == null) {
-                    profile.sendMessage("&cNo arena found.");
+                    profile.sendMessage("&cNo arenas found.");
                     return;
                 }
 
-                //Bot bot = new Bot("&e&lEasy Bot", BotDifficulty.EASY, new NoDebuffBotTrait());
+                Bot bot = new Bot(difficulty);
 
-
+                Practice.get().getMatchManager().getMatchMap().get(ladder)
+                        .add(new Match(
+                                Collections.singletonList(profile),
+                                Collections.singletonList(bot),
+                                null, arena, ladder, false, false));
                 profile.getPlayer().closeInventory();
-                break;
-            case 13:
+                return;
+            }
 
-                break;
-            case 14:
-
-                break;
+            slot++;
         }
     }
 }

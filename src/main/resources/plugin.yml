@@ -4,6 +4,7 @@ version: 1.0.0
 main: net.syphlex.practice.Practice
 
 commands:
+  test:
   practice:
   arena:
     aliases: [map]
